@@ -1,0 +1,14 @@
+{
+  "name": "auntie-bot",
+  "version": "1.0.0",
+  "description": "Auntie Can Count One - WhatsApp bot using Twilio",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.19.0",
+    "twilio": "^5.0.0"
+  }
+}
