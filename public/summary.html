@@ -4,26 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- ✅ Open Graph Meta Tags -->
+  <title>Auntie Can Count One | Weekly Summary</title>
+
+  <!-- ✅ Open Graph Meta -->
   <meta property="og:title" content="Auntie Can Count One Summary" />
-  <meta property="og:description" content="Your weekly kopi, lunch, and GrabFood spending summary. See how much you spent this week!" />
+  <meta property="og:description" content="See how much kopi, lunch, and fun you spent this week 💸. Auntie helps you track it all!" />
   <meta property="og:image" content="https://auntie-bot.onrender.com/images/auntie-summary-preview.png" />
   <meta property="og:url" content="https://auntie-bot.onrender.com/summary.html" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Auntie Can Count One" />
 
+  <!-- ✅ Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Auntie Can Count One Summary" />
-  <meta name="twitter:description" content="Your weekly kopi, lunch, and GrabFood spending summary. Keep track easily!" />
+  <meta name="twitter:description" content="Your weekly kopi + lunch summary by Auntie 👵" />
   <meta name="twitter:image" content="https://auntie-bot.onrender.com/images/auntie-summary-preview.png" />
 
-  <title>Auntie Can Count One | Weekly Summary</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: "Arial", sans-serif;
       background: #fffdf5;
       padding: 40px;
-      color: #222;
+      color: #333;
       max-width: 600px;
       margin: auto;
       border-radius: 10px;
@@ -41,14 +43,41 @@
 <body>
   <h1>👵 Auntie Can Count One Summary</h1>
   <p>Here’s your weekly spending overview:</p>
-  <ul>
-    <li>Kopi ☕ – $12</li>
-    <li>Lunch 🍛 – $18</li>
-    <li>GrabFood 🚗 – $7</li>
-  </ul>
-  <p><strong>Total: $37</strong></p>
-  <div class="footer">
-    © 2025 Auntie Can Count One. Built with love & kopi ☕ in Singapore 🇸🇬.
-  </div>
+  <ul id="summary-list">Loading your expenses lah... ⏳</ul>
+  <p><strong id="total"></strong></p>
+
+  <div class="footer">© 2025 Auntie Can Count One. Built with kopi ☕ and love in Singapore 🇸🇬</div>
+
+  <script>
+    // Fetch data.json from public folder
+    fetch("data.json?_=" + Date.now()) // prevent cache
+      .then(res => res.json())
+      .then(data => {
+        if (!data.length) {
+          document.getElementById("summary-list").innerHTML = "<li>No records yet lah 😅</li>";
+          document.getElementById("total").textContent = "";
+          return;
+        }
+
+        const totals = {};
+        data.forEach(x => {
+          totals[x.category] = (totals[x.category] || 0) + x.amount;
+        });
+
+        let listHtml = "";
+        let total = 0;
+        for (let [cat, amt] of Object.entries(totals)) {
+          listHtml += `<li>${cat}: S$${amt.toFixed(2)}</li>`;
+          total += amt;
+        }
+
+        document.getElementById("summary-list").innerHTML = listHtml;
+        document.getElementById("total").textContent = `💰 Total: S$${total.toFixed(2)}`;
+      })
+      .catch(err => {
+        document.getElementById("summary-list").innerHTML = "<li>Cannot load summary 😢</li>";
+        console.error(err);
+      });
+  </script>
 </body>
 </html>
