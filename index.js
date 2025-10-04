@@ -23,7 +23,7 @@ app.post("/whatsapp", (req, res) => {
   } else if (/^\$?\d+/.test(body) || body.startsWith("spent")) {
     reply.body("Wah noted ah! Auntie record liao 💪 (later I send summary)");
   } else if (body.includes("summary")) {
-    reply.body("Today you spent $7 on kopi/toast. Keep it up ah! 👍");
+    reply.body("Here’s your weekly summary lah 👉 https://auntie-bot.onrender.com/summary.html");
   } else {
     reply.body("Hello hello! Type *help* to see what Auntie can do. Can count one lah! 🤗");
   }
