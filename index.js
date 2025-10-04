@@ -3,6 +3,7 @@ const bodyParser = require("body-parser");
 const { MessagingResponse } = require("twilio").twiml;
 
 const app = express();
+app.use(express.static('public'));  // ✅ serve public files like summary.html
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.post("/whatsapp", (req, res) => {
