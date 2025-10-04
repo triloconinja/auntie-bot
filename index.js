@@ -93,5 +93,13 @@ app.post("/whatsapp", (req, res) => {
   res.type("text/xml").send(twiml.toString());
 });
 
+// Simple landing + health endpoints so Render shows 200 OK
+app.get("/", (req, res) => {
+  res.type("text/plain").send("Auntie Can Count One is online 👵");
+});
+
+app.get("/health", (req, res) => res.sendStatus(200));
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Auntie Can Count One (SGD) running on ${PORT}`));
