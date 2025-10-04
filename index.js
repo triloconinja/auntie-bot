@@ -64,6 +64,9 @@ app.post("/whatsapp", (req, res) => {
       }
       const total = Object.values(totals).reduce((a,b)=>a+b,0);
       text += `\n💰 *Total: S$${total.toFixed(2)}*\nKeep it up, don’t overspend ah 💪`;
+      // 👇 Combine both summary and link (concatenated message)
+      text += `\n\n📊 View full summary here 👉 https://auntie-bot.onrender.com/summary.html`;
+
       reply.body(text);
     }
 
