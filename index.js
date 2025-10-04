@@ -69,7 +69,9 @@ app.post("/whatsapp", (req, res) => {
       text += `\n💰 *Total: S$${total.toFixed(2)}*\nKeep it up, don’t overspend ah 💪`;
 
       // 👇 Personalized summary link
-      text += `\n\n📊 View full summary here 👉 https://auntie-bot.onrender.com/summary.html`;
+      const encodedFrom = encodeURIComponent(from);
+      text += `\n\n📊 View full summary here 👉 https://auntie-bot.onrender.com/summary.html?user=${encodedFrom}`;
+
 
       reply.body(text);
     }

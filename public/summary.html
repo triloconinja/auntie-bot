@@ -49,13 +49,19 @@
   <div class="footer">© 2025 Auntie Can Count One. Built with kopi ☕ and love in Singapore 🇸🇬</div>
 
   <script>
-    // Fetch data.json from public folder
-    fetch("data.json?_=" + Date.now()) // prevent cache
+  // Get ?user=... from the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const user = urlParams.get("user");
+
+  if (!user) {
+    document.getElementById("summary-list").innerHTML = "<li>No user found lah 😅</li>";
+  } else {
+    fetch("data.json?_=" + Date.now())
       .then(res => res.json())
-      .then(data => {
+      .then(all => {
+        const data = all[user] || [];
         if (!data.length) {
           document.getElementById("summary-list").innerHTML = "<li>No records yet lah 😅</li>";
-          document.getElementById("total").textContent = "";
           return;
         }
 
@@ -78,6 +84,8 @@
         document.getElementById("summary-list").innerHTML = "<li>Cannot load summary 😢</li>";
         console.error(err);
       });
-  </script>
+  }
+</script>
+
 </body>
 </html>
