@@ -482,6 +482,41 @@ app.post("/api/clear", express.json(), (req, res) => {
   }
 });
 
+// ---- Feedback API (GET, paginated, read-only) ----
+app.get("/api/feedback", (req, res) => {
+  try {
+    const offset = Math.max(0, parseInt(req.query.offset, 10) || 0);
+    const limitRaw = parseInt(req.query.limit, 10) || 10;
+    const limit = Math.min(50, Math.max(1, limitRaw)); // clamp 1..50
+
+    const all = readData();
+    const list = Array.isArray(all.feedback) ? all.feedback.slice() : [];
+
+    // newest first
+    list.sort((a, b) => {
+      const ta = new Date(a.atServer || a.atClient || 0).getTime();
+      const tb = new Date(b.atServer || b.atClient || 0).getTime();
+      return tb - ta;
+    });
+
+    const total = list.length;
+    const items = list.slice(offset, offset + limit).map(rec => ({
+      id: rec.id || null,
+      token: rec.token || null,   // safe to show truncated client-side
+      page: rec.page || "summary",
+      message: rec.message || "",
+      atServer: rec.atServer || null,
+      atClient: rec.atClient || null,
+      // ip intentionally omitted
+    }));
+
+    res.json({ total, offset, limit, items });
+  } catch (err) {
+    console.error("feedback get error:", err);
+    res.status(500).json({ error: "failed to read feedback" });
+  }
+});
+
 
 
 // ---- Feedback API (JSON-in, stored in data.json) ----
