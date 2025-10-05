@@ -456,7 +456,7 @@ function handler(req, res) {
   else if (text.includes("summary")) {
     const now = new Date();
     const isMonth = text.includes("month");
-    const rangeStart = isMonth ? startOfMonth(now) : startOfWeek(now));
+    const rangeStart = isMonth ? startOfMonth(now) : startOfWeek(now);
     const rangeEnd = now;
 
     const entries = user.entries.filter(e => withinRange(e.date, rangeStart, rangeEnd));
