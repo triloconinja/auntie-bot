@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /data.json
+Disallow: /admin/
+Disallow: /api/
+# Optional: allow everything else
+Allow: /
+
+
