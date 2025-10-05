@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Auntie Can Count One | Feedback</title>
+<style>
+:root{
+  --desert-flower:#E98C7A;
+  --blue-curacao:#58B8C7;
+  --opera-mauve:#C17BA3;
+  --spicy-mustard:#D1AE3A;
+  --mocha-mousse:#9B6B58;
+  --cattleya-orchid:#8E3D79;
+
+  --bg:#FFF9F6;
+  --ink:#1F2328;
+  --muted:#6B7280;
+  --ring:#F0E6DE;
+  --shadow:0 10px 24px rgba(0,0,0,.06);
+
+  --panel:#FAF8F6; /* dirty white */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(233,140,122,.16), transparent 60%),
+    radial-gradient(1000px 500px at 110% 0%, rgba(88,184,199,.14), transparent 60%),
+    linear-gradient(#FFFDFC,var(--bg));
+  overflow-y:auto; overflow-x:hidden;
+}
+
+/* Topbar */
+.app{max-width:960px;margin:auto;padding:20px clamp(14px,3vw,24px) 40px;display:grid;gap:16px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.logo{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(145deg,#FFE4DD,#E3F7FA);
+  display:grid;place-items:center;box-shadow:var(--shadow);
+}
+.logo svg{width:28px;height:28px;stroke:#2B2B2B;fill:none;stroke-width:2}
+h1{margin:0;font-size:clamp(1.05rem,1vw+1rem,1.45rem);color:var(--mocha-mousse)}
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+a.btn,button.btn{
+  background:linear-gradient(180deg,#FDF7F5 0%,#F3EBE6 100%);
+  border:1px solid var(--ring); border-radius:12px;
+  height:40px; min-width:120px; padding:0 14px;
+  font-weight:700; color:#6E362D; display:flex; align-items:center; justify-content:center;
+  text-decoration:none; cursor:pointer;
+}
+
+/* Stats */
+.stats{
+  display:grid; gap:12px;
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+}
+.stat{
+  background:var(--panel); border:1px solid var(--ring); border-radius:16px;
+  box-shadow:var(--shadow); padding:14px 16px;
+}
+.stat h3{margin:0 0 6px; font-size:.9rem; color:var(--muted)}
+.stat .value{font-weight:800; font-size:1.3rem}
+
+/* Feedback list */
+.list{display:grid; gap:12px}
+.card{
+  background:#fff; border:1px solid var(--ring); border-radius:16px;
+  box-shadow:var(--shadow);
+}
+details.feedback{border-radius:16px; overflow:hidden; background:linear-gradient(180deg,#FFFFFF 0%, #FFFEFD 100%)}
+details.feedback summary{
+  list-style:none; cursor:pointer; user-select:none;
+  padding:14px 16px; display:flex; align-items:center; gap:12px;
+  border-bottom:1px solid #F3EAE2;
+}
+details.feedback[open] summary{background:linear-gradient(180deg,#FFF3EE 0%,#FFFFFF 100%)}
+.badge{
+  background:#FFF2EE; color:#6E362D; border:1px solid #F2DAD2;
+  font-weight:700; border-radius:999px; padding:6px 10px; font-size:.85rem; white-space:nowrap;
+}
+.meta{color:var(--muted); font-size:.9rem}
+.summary-line{display:flex; align-items:center; justify-content:space-between; gap:10px; width:100%}
+.msg-preview{color:var(--ink); opacity:.9; font-size:.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:52ch}
+.details{
+  padding:14px 16px; font-size:.95rem; line-height:1.45;
+  background:linear-gradient(180deg,#FFFFFF 0%,#FAF7F2 100%);
+}
+
+/* Loading / end caps */
+.center{display:flex; align-items:center; justify-content:center; color:var(--muted)}
+#loader{padding:16px 0}
+#endcap{padding:14px 0}
+
+/* Sticky “back to top” button (optional) */
+#toTop{
+  position:fixed; right:16px; bottom:20px; z-index:999;
+  width:42px; height:42px; border-radius:10px;
+  background:linear-gradient(180deg,#F6FBFF 0%, #EAF6FF 100%);
+  border:1px solid #D9E7F5; box-shadow:var(--shadow);
+  display:none; place-items:center; cursor:pointer;
+}
+#toTop svg{width:22px;height:22px;stroke:#2563eb;fill:none;stroke-width:2;}
+
+@media (max-width: 560px){
+  .msg-preview{max-width:34ch}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo" aria-label="Auntie logo">
+        <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+          <circle cx="32" cy="32" r="28"/>
+          <circle cx="32" cy="26" r="10"/>
+          <path d="M18 48c8-10 20-10 28 0"/>
+        </svg>
+      </div>
+      <div>
+        <h1>All Feedback — Auntie Can Count One</h1>
+        <div class="meta">Newer first • Endless scroll</div>
+      </div>
+    </div>
+    <div class="actions">
+      <a class="btn" href="/summary.html">← Back to Summary</a>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><h3>Total Feedback</h3><div id="stat-total" class="value">—</div></div>
+    <div class="stat"><h3>Showing</h3><div id="stat-showing" class="value">0</div></div>
+  </div>
+
+  <div id="list" class="list" aria-live="polite"></div>
+  <div id="loader" class="center meta" hidden>Loading…</div>
+  <div id="endcap" class="center meta" hidden>No more feedback liao 😄</div>
+  <div id="sentinel" class="center meta" aria-hidden="true"></div>
+</div>
+
+<button id="toTop" aria-label="Back to top">
+  <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7-7 7 7"/></svg>
+</button>
+
+<script>
+const $ = (id)=>document.getElementById(id);
+const SG_TZ = "Asia/Singapore";
+
+let total=0, loaded=0, limit=10, busy=false, done=false;
+/* If GET /api/feedback not available, we fallback to client-paginating data.json */
+let _fallbackAll = null;
+
+function fmtDate(iso){
+  if(!iso) return "—";
+  return new Date(iso).toLocaleString("en-SG",{ timeZone: SG_TZ, hour12:false });
+}
+
+async function fetchPage(offset, limit){
+  // Primary: server pagination
+  try{
+    const url = `/api/feedback?offset=${offset}&limit=${limit}`;
+    const res = await fetch(url);
+    if(res.ok){
+      return await res.json(); // { total, offset, limit, items: [] }
+    }
+    throw new Error("no api");
+  }catch(_){
+    // Fallback: load once from data.json then slice client-side
+    if(!_fallbackAll){
+      try{
+        const res2 = await fetch("/data.json");
+        const json = await res2.json();
+        _fallbackAll = (json.feedback || []).slice().sort((a,b)=> new Date(b.atServer||b.atClient) - new Date(a.atServer||a.atClient));
+        total = _fallbackAll.length;
+      }catch(e){
+        console.error(e);
+        return { total: 0, offset, limit, items: [] };
+      }
+    }
+    const items = _fallbackAll.slice(offset, offset+limit);
+    return { total, offset, limit, items };
+  }
+}
+
+function renderItem(idx, rec){
+  const when = fmtDate(rec.atServer || rec.atClient);
+  const token = rec.token ? ` • Token: ${rec.token.slice(0,8)}…` : "";
+  const page  = rec.page ? ` • Page: ${rec.page}` : "";
+  const el = document.createElement("details");
+  el.className = "card feedback";
+  el.innerHTML = `
+    <summary>
+      <span class="badge">#${idx}</span>
+      <div class="summary-line">
+        <div class="msg-preview">${escapeHtml(rec.message || "—")}</div>
+        <div class="meta">${when}</div>
+      </div>
+    </summary>
+    <div class="details">
+      <div><strong>When:</strong> ${when}</div>
+      <div><strong>ID:</strong> ${rec.id || "—"}${token}${page}</div>
+      <div style="margin-top:8px"><strong>Comment:</strong><br>${nl2br(escapeHtml(rec.message || "—"))}</div>
+    </div>
+  `;
+  return el;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+function nl2br(s){ return s.replace(/\n/g,"<br>"); }
+
+async function loadMore(){
+  if(busy || done) return;
+  busy = true;
+  $("loader").hidden = false;
+
+  const page = await fetchPage(loaded, limit);
+
+  if (typeof page.total === "number") total = page.total;
+  const items = page.items || [];
+
+  if(items.length === 0){
+    done = true;
+    $("endcap").hidden = false;
+    $("loader").hidden = true;
+    busy = false;
+    updateStats();
+    return;
+  }
+
+  const frag = document.createDocumentFragment();
+  items.forEach((rec, i) => {
+    frag.appendChild(renderItem(loaded + i + 1, rec));
+  });
+  $("list").appendChild(frag);
+
+  loaded += items.length;
+  $("loader").hidden = true;
+  busy = false;
+  updateStats();
+}
+
+function updateStats(){
+  $("stat-total").textContent = total || 0;
+  $("stat-showing").textContent = loaded || 0;
+}
+
+const io = new IntersectionObserver((entries)=>{
+  const e = entries[0];
+  if(e.isIntersecting) loadMore();
+}, { root: null, rootMargin: "600px 0px", threshold: 0 });
+
+io.observe($("sentinel"));
+
+/* Back-to-top visibility */
+window.addEventListener("scroll", ()=>{
+  $("toTop").style.display = window.scrollY > 600 ? "grid" : "none";
+});
+$("toTop").addEventListener("click", ()=> window.scrollTo({ top:0, behavior:"smooth" }));
+
+/* initial */
+loadMore();
+</script>
+</body>
+</html>
