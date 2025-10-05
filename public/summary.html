@@ -7,270 +7,436 @@
 
 <style>
 :root{
+  /* Pantone-inspired palette */
   --desert-flower:#E98C7A;
   --blue-curacao:#58B8C7;
   --opera-mauve:#C17BA3;
   --spicy-mustard:#D1AE3A;
   --mocha-mousse:#9B6B58;
   --cattleya-orchid:#8E3D79;
-  --bg:#FFF9F6;
+
+  /* UI */
+  --bg:#FFF9F6;     /* airy background */
   --ink:#1F2328;
   --muted:#6B7280;
   --ring:#F0E6DE;
-  --shadow:0 12px 30px rgba(0,0,0,.06);
+  --shadow:0 10px 24px rgba(0,0,0,.06);
+
+  /* “Dirty white” panel tints */
+  --panel-kpi:#F9F6F4;        /* warm off-white */
+  --panel-viz:#F7FAFA;        /* cool off-white */
+  --panel-breakdown:#F9F6F8;  /* mauve off-white */
+  --panel-list:#FAF8F4;       /* mustard off-white */
 }
+
+/* Reset / base */
 *{box-sizing:border-box;margin:0;padding:0}
 body{
-  font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto;
+  font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial;
   color:var(--ink);
   background:
-    radial-gradient(1200px 600px at 10% -10%, rgba(233,140,122,.18), transparent 60%),
-    radial-gradient(1000px 500px at 110% 0%, rgba(88,184,199,.15), transparent 60%),
+    radial-gradient(1200px 600px at 10% -10%, rgba(233,140,122,.16), transparent 60%),
+    radial-gradient(1000px 500px at 110% 0%, rgba(88,184,199,.14), transparent 60%),
     linear-gradient(#FFFDFC,var(--bg));
   overflow-x:hidden;
 }
 .app{max-width:1100px;margin:auto;padding:20px clamp(14px,3vw,24px) 40px;display:grid;gap:16px;}
+
+/* Top bar */
 .topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
 .brand{display:flex;align-items:center;gap:12px;}
 .logo{
-  width:48px;height:48px;border-radius:50%;
-  background:linear-gradient(145deg,var(--desert-flower),var(--blue-curacao));
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:var(--shadow);
+  width:48px;height:48px;border-radius:12px;
+  background:linear-gradient(145deg,#FFE4DD,#E3F7FA);
+  display:grid;place-items:center;box-shadow:var(--shadow);
 }
-.logo svg{width:32px;height:32px;}
-h1{margin:0;font-size:clamp(1.1rem,1vw+1rem,1.5rem);color:var(--mocha-mousse);}
-.sub{margin:0;color:var(--muted);font-size:.95rem;}
+.logo svg{width:30px;height:30px;stroke:#2B2B2B;fill:none;stroke-width:2;}
+
+/* Controls */
 .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
-.dropdown{position:relative;}
+.dropdown{position:relative}
 .dropdown-btn{
-  background:linear-gradient(180deg,#FDF7F5 0%,#FCEFEA 100%);
-  border:1px solid var(--ring);border-radius:12px;
-  padding:10px 14px;font-weight:600;color:var(--ink);
-  cursor:pointer;display:flex;align-items:center;gap:6px;transition:border-color .2s;
+  background:linear-gradient(180deg,#FDF7F5 0%,#F3EBE6 100%);
+  border:1px solid var(--ring); border-radius:12px;
+  padding:10px 14px; font-weight:600; color:var(--ink);
+  cursor:pointer; display:flex; align-items:center; gap:6px;
+  transition:border-color .2s;
 }
 .dropdown-btn:hover{border-color:var(--blue-curacao);}
 .dropdown-menu{
-  position:absolute;top:110%;left:0;background:#fff;
-  border:1px solid var(--ring);border-radius:12px;
-  box-shadow:0 6px 20px rgba(0,0,0,.08);
-  min-width:160px;padding:6px 0;
-  opacity:0;pointer-events:none;
-  transform:translateY(8px);
-  transition:opacity .25s ease,transform .25s ease;
-  z-index:100;
+  position:absolute; top:110%; left:0; background:#fff;
+  border:1px solid var(--ring); border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.08);
+  min-width:170px; padding:6px 0; z-index:100;
+  opacity:0; pointer-events:none; transform:translateY(8px);
+  transition:opacity .25s ease, transform .25s ease;
 }
-.dropdown.open .dropdown-menu{opacity:1;pointer-events:auto;transform:translateY(0);}
+.dropdown.open .dropdown-menu{opacity:1; pointer-events:auto; transform:translateY(0);}
 .dropdown-item{
-  padding:10px 14px;display:flex;align-items:center;gap:8px;
-  color:var(--ink);font-size:.95rem;cursor:pointer;transition:background .15s;
+  padding:10px 14px; display:flex; align-items:center; gap:8px;
+  color:var(--ink); font-size:.95rem; cursor:pointer;
 }
 .dropdown-item:hover{background:linear-gradient(90deg,#E8FAFC,#fff);}
 button.primary{
   background:linear-gradient(180deg,#FFE7E1 0%,#FFD9D0 100%);
-  border:1px solid #FFD2C8;border-radius:12px;
-  padding:10px 14px;font-weight:700;color:#6E362D;cursor:pointer;
+  border:1px solid #FFD2C8; border-radius:12px;
+  padding:10px 14px; font-weight:700; color:#6E362D; cursor:pointer;
 }
-.meta{color:var(--muted);font-size:.9rem;}
+.meta{color:var(--muted);font-size:.9rem}
+
 /* Panels */
-.kpis{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
-.kpi{background:linear-gradient(to bottom right,#fff,var(--desert-flower, #fdd));border:1px solid var(--ring);border-radius:16px;box-shadow:var(--shadow);padding:16px;}
-.kpi h3{margin-bottom:4px;font-size:.9rem;color:var(--muted);}
-.value{font-weight:800;font-size:1.4rem;color:var(--ink);}
-.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));}
-.card{border-radius:16px;box-shadow:var(--shadow);padding:20px;}
-.viz{background:linear-gradient(to bottom right,#fff,var(--blue-curacao));}
-.breakdown{background:linear-gradient(to bottom right,#fff,var(--opera-mauve));}
-.list{background:linear-gradient(to bottom right,#fff,var(--spicy-mustard));}
-.section-title{margin-bottom:10px;font-weight:800;color:#6E2B20;}
-.table{width:100%;border-collapse:collapse;}
-.table th,.table td{padding:12px;border-bottom:1px solid #EFE6DD;text-align:left;font-size:.95rem;}
-.table th{background:#FFF3EE;color:#7A5D57;}
-.amt{text-align:right;}
-.pct{color:var(--muted);font-size:.9rem;text-align:right;}
-.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
-.tag{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#FFF7F2;border:1px solid var(--ring);font-size:.9rem;}
-.dot{width:12px;height:12px;border-radius:3px;}
-#popup{position:absolute;display:none;pointer-events:none;background:#fff;border:1px solid var(--ring);border-radius:8px;padding:6px 10px;box-shadow:var(--shadow);font-size:.85rem;color:#333;z-index:999;}
-#auntie-bubble{position:fixed;bottom:16px;right:16px;max-width:260px;background:linear-gradient(to bottom right,#fff,var(--cattleya-orchid));border:1px solid var(--ring);border-radius:16px;padding:12px 14px;box-shadow:var(--shadow);font-size:.9rem;color:#6E2B20;display:none;animation:fadeIn .4s ease;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-@media(max-width:768px){
-  canvas{width:100%!important;height:auto!important;}
+.kpis{
+  display:grid; gap:16px;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
 }
+.kpi{
+  background:var(--panel-kpi);
+  border:1px solid var(--ring); border-radius:16px;
+  box-shadow:var(--shadow); padding:16px;
+}
+.kpi h3{margin-bottom:4px; font-size:.9rem; color:var(--muted);}
+.value{font-weight:800;font-size:1.4rem;color:var(--ink);}
+
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));}
+.card{
+  border:1px solid var(--ring); border-radius:16px; box-shadow:var(--shadow); padding:20px;
+}
+.viz{background:var(--panel-viz);}
+.breakdown{background:var(--panel-breakdown);}
+.list{background:var(--panel-list);}
+.section-title{margin-bottom:10px;font-weight:800;color:#6E2B20}
+
+/* Tables */
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:12px;border-bottom:1px solid #EFE6DD;text-align:left;font-size:.95rem}
+.table th{background:#FFF3EE;color:#7A5D57}
+.amt{text-align:right}
+.pct{color:var(--muted);font-size:.9rem;text-align:right}
+
+/* Legend & donut */
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.tag{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#FFF7F2;border:1px solid var(--ring);font-size:.9rem}
+.dot{width:12px;height:12px;border-radius:3px}
+canvas{width:100% !important;height:auto !important}
+
+/* Tooltip & one-time bubble */
+#popup{position:absolute;display:none;pointer-events:none;background:#fff;border:1px solid var(--ring);border-radius:8px;padding:6px 10px;box-shadow:var(--shadow);font-size:.85rem;color:#333;z-index:999}
+#auntie-bubble{
+  position:fixed;bottom:16px;right:16px;max-width:260px;
+  background:#FFFFFF;border:1px solid var(--ring);border-radius:16px;
+  padding:12px 14px; box-shadow:var(--shadow);
+  color:#6E2B20; display:none; animation:fadeIn .4s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 
 <body>
-<div class="app">
-  <div class="topbar">
-    <div class="brand">
-      <div class="logo">
-        <!-- pastel Auntie SVG -->
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="none" stroke="#222" stroke-width="2"/><path d="M22 38c5 6 15 6 20 0" stroke="#222" stroke-width="2" fill="none"/><circle cx="24" cy="26" r="3" fill="#222"/><circle cx="40" cy="26" r="3" fill="#222"/><path d="M28 18c2-4 8-4 10 0" stroke="#222" stroke-width="2" fill="none"/></svg>
-      </div>
-      <div>
-        <h1>Auntie Can Count One — Summary</h1>
-        <p class="sub">Pastel Pantone dashboard. Donut so tiny but shiok 🍩</p>
-      </div>
-    </div>
-
-    <div class="controls">
-      <div class="dropdown" id="rangeDrop">
-        <div class="dropdown-btn" id="rangeBtn">This Week ▾</div>
-        <div class="dropdown-menu" id="rangeMenu">
-          <div class="dropdown-item" data-range="week">This Week</div>
-          <div class="dropdown-item" data-range="month">This Month</div>
-          <div class="dropdown-item" data-range="all">All Time</div>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-label="Auntie logo">
+          <!-- simple friendly “auntie” placeholder icon (inline SVG; replace later easily) -->
+          <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+            <circle cx="32" cy="32" r="28" />
+            <circle cx="32" cy="26" r="10" />
+            <path d="M18 48c8-10 20-10 28 0" />
+          </svg>
+        </div>
+        <div>
+          <h1>Auntie Can Count One — Summary</h1>
+          <p class="sub">Pastel Pantone dashboard. Donut so tiny but shiok 🍩</p>
         </div>
       </div>
 
-      <div class="dropdown" id="exportDrop">
-        <div class="dropdown-btn" id="exportBtn">Export ▾</div>
-        <div class="dropdown-menu" id="exportMenu">
-          <div class="dropdown-item" id="exportCsv">📄 CSV</div>
-          <div class="dropdown-item" id="exportXls">📊 Excel</div>
-          <div class="dropdown-item" id="exportPdf">🖨️ PDF</div>
+      <div class="controls">
+        <!-- Range dropdown -->
+        <div class="dropdown" id="rangeDrop">
+          <div class="dropdown-btn" id="rangeBtn">This Week ▾</div>
+          <div class="dropdown-menu" id="rangeMenu">
+            <div class="dropdown-item" data-range="week">This Week</div>
+            <div class="dropdown-item" data-range="month">This Month</div>
+            <div class="dropdown-item" data-range="all">All Time</div>
+          </div>
         </div>
+
+        <!-- Export dropdown -->
+        <div class="dropdown" id="exportDrop">
+          <div class="dropdown-btn" id="exportBtn">Export ▾</div>
+          <div class="dropdown-menu" id="exportMenu">
+            <div class="dropdown-item" id="exportCsv">📄 CSV</div>
+            <div class="dropdown-item" id="exportXls">📊 Excel</div>
+            <div class="dropdown-item" id="exportPdf">🖨️ PDF</div>
+          </div>
+        </div>
+
+        <button id="refresh" class="primary">Refresh</button>
+        <span id="status" class="meta"></span>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpis">
+      <div class="kpi">
+        <h3 id="hdr">🧾 Summary</h3>
+        <div id="kpi-total" class="value">S$0.00</div>
+        <div id="kpi-meta" class="meta">—</div>
+      </div>
+      <div class="kpi">
+        <h3>📦 Categories</h3>
+        <div id="kpi-cats" class="value">0</div>
+      </div>
+      <div class="kpi">
+        <h3>🗓️ Entries</h3>
+        <div id="kpi-entries" class="value">0</div>
+      </div>
+    </div>
+
+    <!-- Panels -->
+    <div class="grid">
+      <div class="card viz">
+        <div class="section-title">Category Donut</div>
+        <canvas id="donut" aria-label="Spending donut chart"></canvas>
+        <div id="legend" class="legend"></div>
       </div>
 
-      <button id="refresh" class="primary">Refresh</button>
-      <span id="status" class="meta"></span>
+      <div class="card breakdown">
+        <div class="section-title">Breakdown</div>
+        <table class="table" aria-label="Category breakdown table">
+          <thead>
+            <tr><th>Category</th><th class="amt">Amount</th><th class="pct">Share</th></tr>
+          </thead>
+          <tbody id="tbl"></tbody>
+        </table>
+      </div>
+
+      <div class="card list">
+        <div class="section-title">Recent Entries</div>
+        <table class="table" aria-label="Recent entries">
+          <thead>
+            <tr><th>#</th><th>When (SGT)</th><th>Category</th><th class="amt">Amount</th></tr>
+          </thead>
+          <tbody id="recent"></tbody>
+        </table>
+        <p id="empty" class="meta" hidden>No records yet lah 😅</p>
+      </div>
     </div>
+
+    <div class="meta" id="generatedAt"></div>
   </div>
 
-  <div class="kpis">
-    <div class="kpi"><h3 id="hdr">🧾 Summary</h3><div id="kpi-total" class="value">S$0.00</div><div id="kpi-meta" class="meta">—</div></div>
-    <div class="kpi"><h3>📦 Categories</h3><div id="kpi-cats" class="value">0</div></div>
-    <div class="kpi"><h3>🗓️ Entries</h3><div id="kpi-entries" class="value">0</div></div>
-  </div>
-
-  <div class="grid">
-    <div class="card viz">
-      <div class="section-title">Category Donut</div>
-      <canvas id="donut"></canvas>
-      <div id="legend" class="legend"></div>
-    </div>
-
-    <div class="card breakdown">
-      <div class="section-title">Breakdown</div>
-      <table class="table"><thead><tr><th>Category</th><th class="amt">Amount</th><th class="pct">Share</th></tr></thead><tbody id="tbl"></tbody></table>
-    </div>
-
-    <div class="card list">
-      <div class="section-title">Recent Entries</div>
-      <table class="table"><thead><tr><th>#</th><th>When (SGT)</th><th>Category</th><th class="amt">Amount</th></tr></thead><tbody id="recent"></tbody></table>
-      <p id="empty" class="meta" hidden>No records yet lah 😅</p>
-    </div>
-  </div>
-
-  <div class="meta" id="generatedAt"></div>
-</div>
-
-<div id="popup"></div>
-<div id="auntie-bubble"></div>
+  <!-- Tooltip + one-time bubble -->
+  <div id="popup"></div>
+  <div id="auntie-bubble"></div>
 
 <script>
+/* ===== Helpers & constants ===== */
 const SG_TZ="Asia/Singapore";
 const token=new URLSearchParams(location.search).get("u");
 const $=id=>document.getElementById(id);
 const money=n=>"S$"+Number(n).toFixed(2);
-const rand=a=>a[Math.floor(Math.random()*a.length)];
-const SINGLISH_QUOTES=[
-"Steady lah 💪 you power one!",
-"Aiyo 😅 spend again ah?",
-"Huat ah 🧧 but don’t overspend hor!",
-"Wallet say 🥲 'help me please!'",
-"Budget tight like jeans sia 👖",
-"Don’t act blur hor 👀 every dollar count!",
-"Good job sia 👍 discipline!",
-"Buy kopi or café sia ☕",
-"Auntie proud lah 🥹",
-"Small small also count one 💰",
-"Don’t say Auntie never remind ah 🤨",
-"Steady like MRT timing (sometimes) 🚈",
-"Save first then shop lah 🛍️",
-"You can lah 💪 continue!",
-"Kopi again? ☕ Wallet shaking leh!",
-"Auntie clap for you 👏",
-"Today save, tomorrow huat 🌈",
-"Don’t blur blur lah 😅",
-"Wah high SES today ah ✨",
-"Spend liao must log ok ✅",
-"Keep going! Power discipline ⚡",
-"Budget hero sia 🦸‍♂️",
-"Auntie say good job 👍",
-"Wah spend like minister ah 💼",
-"Don’t later cry hor 😭",
-"Auntie eyes big big 👀 checking your spending",
-"Steady lah you 🧾",
-"Save today, smile tomorrow 😄",
-"Money no grow on tree leh 🌳",
-"Control a bit lah 😆",
-"Reward yourself, but small small ok 🎁",
-"Good boy/girl lah 👏 saving like pro!",
-"Spend wisely hor 💸",
-"Budget got eyes one 👀",
-"Jialat! Too much spend! 😂",
-"Auntie approve this one ✅",
-"Wah sibei consistent sia 🔥",
-"Don’t forget kopi money ☕",
-"Your wallet got six-pack already 🏋️‍♀️",
-"Today eat big, tomorrow Maggie mee ah 🍜",
-"Aiyo Auntie faint already 😵‍💫",
-"Money fly faster than MRT 🛫",
-"Smart spender lah 💡",
-"Save more can buy Tesla 🚗",
-"Your future self say thank you 🙏",
-"Huat slowly but surely 🧧",
-"Auntie say continue like this good lah 💅",
-"Don’t forget your budget friend hor 💁‍♀️",
-"Last warning, control spending ok 😤",
-"Solid lah, CFO material 🧠",
-"Budget so tight can hear squeak 🐭",
-"Ok lah, at least you tracking 👌"
-];
-function showBubble(msg){const b=$("auntie-bubble");b.textContent=msg;b.style.display="block";setTimeout(()=>b.style.display="none",6000);}
-async function fetchSummary(){
- if(!token){$("status").textContent="No token found lah 😅";return null;}
- try{$("status").textContent="Fetching…";const r=await fetch(`/api/summary?u=${encodeURIComponent(token)}&_=${Date.now()}`);
- if(!r.ok)throw new Error(`HTTP ${r.status}`);const d=await r.json();$("status").textContent="";return d;}
- catch(e){console.error(e);$("status").textContent="Error 😢";return null;}
-}
-function sizeCanvasForDisplay(c){const ratio=window.devicePixelRatio||1;const cssW=c.clientWidth;const cssH=c.clientHeight;c.width=Math.floor(cssW*ratio);c.height=Math.floor(cssH*ratio);const ctx=c.getContext("2d");ctx.setTransform(ratio,0,0,ratio,0,0);return ctx;}
 const donutPalette=["#E98C7A","#58B8C7","#C17BA3","#8E3D79","#D1AE3A","#9B6B58"];
+
+/* One-time greeting per page load: use a flag scoped to this page */
+function maybeShowOneTimeGreeting(){
+  if (!sessionStorage.getItem("auntie_greeted")) {
+    showBubble("Steady lah 💪 track first then spend!");
+    sessionStorage.setItem("auntie_greeted","1");
+  }
+}
+function showBubble(msg){
+  const b=$("auntie-bubble");
+  b.textContent=msg; b.style.display="block";
+  setTimeout(()=>{ b.style.display="none"; }, 6000); // 6 seconds
+}
+
+/* Fetch your summary (keep existing API contract) */
+async function fetchSummary(){
+  if(!token){$("status").textContent="No token found lah 😅";return null;}
+  try{
+    $("status").textContent="Fetching…";
+    const res=await fetch(`/api/summary?u=${encodeURIComponent(token)}&_=${Date.now()}`);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    $("status").textContent=""; return data;
+  }catch(e){ console.error(e); $("status").textContent="Error 😢"; return null; }
+}
+
+/* Donut drawing (responsive, crisp) */
+function sizeCanvasForDisplay(c){
+  const ratio=window.devicePixelRatio||1;
+  const cssW=c.clientWidth, cssH=Math.max(220, c.clientWidth*0.62); // nice aspect; mobile full width
+  c.style.height = cssH+"px";
+  c.width=Math.floor(cssW*ratio); c.height=Math.floor(cssH*ratio);
+  const ctx=c.getContext('2d'); ctx.setTransform(ratio,0,0,ratio,0,0); return ctx;
+}
 function drawDonut(c,rows,total){
- const ctx=sizeCanvasForDisplay(c);const W=c.clientWidth,H=c.clientHeight;ctx.clearRect(0,0,W,H);
- const cx=W/2,cy=H/2;const outerR=Math.min(W,H)*0.42,innerR=outerR*0.6;
- let start=-Math.PI/2;
- rows.forEach(([cat,amt],i)=>{const frac=total?amt/total:0;const angle=frac*Math.PI*2;const end=start+angle;
- ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,outerR,start,end);ctx.lineTo(cx,cy);
- ctx.fillStyle=donutPalette[i%donutPalette.length];ctx.fill();rows[i].angle=[start,end];start=end;});
- ctx.globalCompositeOperation="destination-out";ctx.beginPath();ctx.arc(cx,cy,innerR,0,Math.PI*2);ctx.fill();ctx.globalCompositeOperation="source-over";
- ctx.fillStyle="#5B3B33";ctx.textAlign="center";ctx.font="700 14px sans-serif";ctx.fillText("Total",cx,cy-10);ctx.font="800 20px sans-serif";ctx.fillText(money(total),cx,cy+16);
+  const ctx=sizeCanvasForDisplay(c);
+  const W=c.clientWidth, H=c.clientHeight;
+  ctx.clearRect(0,0,W,H);
+  const cx=W/2, cy=H/2, outerR=Math.min(W,H)*0.42, innerR=outerR*0.6;
+  let start=-Math.PI/2;
+  rows.forEach(([cat,amt],i)=>{
+    const frac=total?amt/total:0, angle=frac*Math.PI*2, end=start+angle;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,outerR,start,end); ctx.lineTo(cx,cy);
+    ctx.fillStyle=donutPalette[i%donutPalette.length]; ctx.fill();
+    rows[i].angle=[start,end]; start=end;
+  });
+  // hole
+  ctx.globalCompositeOperation="destination-out";
+  ctx.beginPath(); ctx.arc(cx,cy,innerR,0,Math.PI*2); ctx.fill();
+  ctx.globalCompositeOperation="source-over";
+  // center label
+  ctx.fillStyle="#5B3B33"; ctx.textAlign="center";
+  ctx.font="700 14px ui-sans-serif"; ctx.fillText("Total",cx,cy-10);
+  ctx.font="800 20px ui-sans-serif"; ctx.fillText(money(total),cx,cy+16);
 }
-function renderLegend(rows){const legend=$("legend");legend.innerHTML="";rows.forEach(([cat],i)=>{const tag=document.createElement("div");tag.className="tag";const dot=document.createElement("span");dot.className="dot";dot.style.background=donutPalette[i%donutPalette.length];const label=document.createElement("span");label.textContent=cat;tag.append(dot,label);legend.appendChild(tag);});}
-function renderTable(rows,total){const tbody=$("tbl");tbody.innerHTML="";rows.forEach(([cat,amt],i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td><span style='display:inline-flex;align-items:center;gap:8px'><span style='width:10px;height:10px;border-radius:3px;background:${donutPalette[i%donutPalette.length]}'></span>${cat}</span></td><td class='amt'>${money(amt)}</td><td class='pct'>${total?(amt/total*100).toFixed(1)+'%':'—'}</td>`;tbody.appendChild(tr);});}
-function renderRecent(entries){const tbody=$("recent");tbody.innerHTML="";if(!entries.length){$("empty").hidden=false;return;}$("empty").hidden=true;entries.slice(-10).reverse().forEach((e,i)=>{const tr=document.createElement("tr");tr.innerHTML=`<td>${i+1}</td><td>${new Date(e.date).toLocaleString("en-SG",{timeZone:SG_TZ,hour12:false})}</td><td>${e.category||'uncategorised'}</td><td class='amt'>${money(e.amount||0)}</td>`;tbody.appendChild(tr);});}
-function exportCSV(rows){const d=new Date().toISOString().slice(0,10);let csv="Category,Amount\n";rows.forEach(([c,a])=>csv+=`${c},${a}\n`);const b=new Blob([csv],{type:"text/csv"});const url=URL.createObjectURL(b);const a=document.createElement("a");a.href=url;a.download=`auntie_summary_${d}.csv`;a.click();}
-async function load(){
- const data=await fetchSummary();if(!data)return;
- const range=$("rangeBtn").textContent.toLowerCase().includes("month")?"month":$("rangeBtn").textContent.toLowerCase().includes("all")?"all":"week";
- const entries=data.entries||[];let filtered=entries;
- const now=new Date();if(range==="month"){const start=new Date(now.getFullYear(),now.getMonth(),1);filtered=entries.filter(e=>new Date(e.date)>=start);}else if(range==="week"){const day=(now.getDay()+6)%7;const start=new Date(now);start.setDate(now.getDate()-day);filtered=entries.filter(e=>new Date(e.date)>=start);}
- const byCat={};let total=0;for(const e of filtered){const cat=e.category||"uncategorised";const amt=+e.amount||0;byCat[cat]=(byCat[cat]||0)+amt;total+=amt;}
- const rows=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
- renderLegend(rows);renderTable(rows,total);renderRecent(filtered);drawDonut($("donut"),rows,total);
- $("kpi-total").textContent=money(total);$("kpi-cats").textContent=rows.length;$("kpi-entries").textContent=filtered.length;
- $("generatedAt").textContent="Generated at: "+new Date().toLocaleString("en-SG",{timeZone:SG_TZ});
- showBubble(rand(SINGLISH_QUOTES));
+
+/* Renderers */
+function renderLegend(rows){
+  const legend=$("legend"); legend.innerHTML="";
+  rows.forEach(([cat],i)=>{
+    const tag=document.createElement("div"); tag.className="tag";
+    const dot=document.createElement("span"); dot.className="dot";
+    dot.style.background=donutPalette[i%donutPalette.length];
+    const label=document.createElement("span"); label.textContent=cat;
+    tag.append(dot,label); legend.appendChild(tag);
+  });
 }
-document.querySelectorAll(".dropdown-btn").forEach(btn=>btn.addEventListener("click",e=>{const d=btn.parentElement;d.classList.toggle("open");document.querySelectorAll(".dropdown").forEach(o=>{if(o!==d)o.classList.remove("open");});}));
-document.addEventListener("click",e=>{if(!e.target.closest(".dropdown"))document.querySelectorAll(".dropdown").forEach(d=>d.classList.remove("open"));});
-document.querySelectorAll("#rangeMenu .dropdown-item").forEach(it=>it.addEventListener("click",e=>{$("rangeBtn").textContent=e.target.textContent+" ▾";document.querySelectorAll(".dropdown").forEach(d=>d.classList.remove("open"));load();}));
-document.querySelectorAll("#exportMenu .dropdown-item").forEach(it=>it.addEventListener("click",()=>{showBubble(rand(SINGLISH_QUOTES));}));
-$("refresh").addEventListener("click",()=>{load();showBubble(rand(SINGLISH_QUOTES));});
-window.addEventListener("resize",()=>{load();});
+function renderTable(rows,total){
+  const tbody=$("tbl"); tbody.innerHTML="";
+  rows.forEach(([cat,amt],i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td><span style="display:inline-flex;align-items:center;gap:8px">
+      <span style="width:10px;height:10px;border-radius:3px;background:${donutPalette[i%donutPalette.length]}"></span>
+      ${cat}</span></td>
+      <td class="amt">${money(amt)}</td>
+      <td class="pct">${total?(amt/total*100).toFixed(1)+'%':'—'}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+function renderRecent(entries){
+  const tbody=$("recent"); tbody.innerHTML="";
+  if(!entries.length){ $("empty").hidden=false; return; }
+  $("empty").hidden=true;
+  entries.slice(-10).reverse().forEach((e,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${i+1}</td>
+      <td>${new Date(e.date).toLocaleString("en-SG",{timeZone:SG_TZ,hour12:false})}</td>
+      <td>${e.category||'uncategorised'}</td>
+      <td class="amt">${money(e.amount||0)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* Export helpers */
+function exportCSV(rows){
+  const d=new Date().toISOString().slice(0,10);
+  let csv="Category,Amount\n"; rows.forEach(([c,a])=>csv+=`${c},${a}\n`);
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`auntie-summary-${d}.csv`; a.click();
+}
+function exportExcel(rows){ exportCSV(rows); } // lightweight .xls via CSV
+function exportPDF(rows){
+  const d=new Date().toISOString().slice(0,10);
+  const w=window.open("","","width=720,height=820");
+  w.document.write("<h3>Auntie Can Count Summary</h3><table border=1 cellspacing=0 cellpadding=6><tr><th>Category</th><th>Amount</th></tr>");
+  rows.forEach(([c,a])=>w.document.write(`<tr><td>${c}</td><td>${money(a)}</td></tr>`));
+  w.document.write("</table>"); w.print(); w.close();
+}
+
+/* Dropdowns */
+function toggleDrop(el){
+  el.classList.toggle("open");
+  document.querySelectorAll(".dropdown").forEach(d=>{ if(d!==el) d.classList.remove("open"); });
+}
+document.body.addEventListener("click",e=>{
+  if(!e.target.closest(".dropdown")) document.querySelectorAll(".dropdown").forEach(d=>d.classList.remove("open"));
+});
+document.querySelectorAll(".dropdown-btn").forEach(btn=>{
+  btn.addEventListener("click",e=>{ toggleDrop(btn.closest(".dropdown")); e.stopPropagation(); });
+});
+
+document.querySelectorAll("#rangeMenu .dropdown-item").forEach(it=>{
+  it.addEventListener("click",()=>{
+    $("rangeBtn").textContent = it.textContent + " ▾";
+    document.querySelectorAll(".dropdown").forEach(d=>d.classList.remove("open"));
+    load(it.dataset.range);
+  });
+});
+document.querySelector("#exportMenu #exportCsv").addEventListener("click",()=> exportCSV(window.__rows||[]));
+document.querySelector("#exportMenu #exportXls").addEventListener("click",()=> exportExcel(window.__rows||[]));
+document.querySelector("#exportMenu #exportPdf").addEventListener("click",()=> exportPDF(window.__rows||[]));
+
+/* Main load */
+async function load(forceRange){
+  const data=await fetchSummary(); if(!data) return;
+
+  $("generatedAt").textContent = "Generated at: " +
+    new Date(data.generatedAt||Date.now()).toLocaleString("en-SG",{timeZone:SG_TZ,hour12:false});
+
+  const label=$("rangeBtn").textContent.toLowerCase();
+  const range = forceRange || (label.includes("month")?"month": label.includes("all")?"all":"week");
+
+  const entries=data.entries||[];
+  const now=new Date();
+  let scoped=entries;
+  if(range==="month"){
+    const start=new Date(now.getFullYear(),now.getMonth(),1);
+    scoped=entries.filter(e=>new Date(e.date)>=start);
+  }else if(range==="week"){
+    const day=(now.getDay()+6)%7; const start=new Date(now);
+    start.setHours(0,0,0,0); start.setDate(now.getDate()-day);
+    scoped=entries.filter(e=>new Date(e.date)>=start);
+  }
+
+  const byCat={}; let total=0;
+  scoped.forEach(e=>{const c=e.category||"uncategorised";const a=+e.amount||0; byCat[c]=(byCat[c]||0)+a; total+=a;});
+  const rows=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  window.__rows = rows; // for exports
+
+  // KPIs
+  $("kpi-total").textContent=money(total);
+  $("kpi-cats").textContent=rows.length;
+  $("kpi-entries").textContent=scoped.length;
+  $("hdr").textContent = range==="month"?"🧾 This Month Summary": range==="all"?"🧾 All-Time Summary":"🧾 This Week Summary";
+  $("kpi-meta").textContent = range==="month"?"This month total":range==="all"?"All-time total":"This week total";
+
+  // Render UI
+  renderLegend(rows); renderTable(rows,total); renderRecent(scoped); drawDonut($("donut"),rows,total);
+
+  // Donut tooltip (click)
+  const donut=$("donut"), popup=$("popup");
+  donut.onclick = (e)=>{
+    const rect=donut.getBoundingClientRect();
+    const x=e.clientX-rect.left, y=e.clientY-rect.top;
+    const cx=rect.width/2, cy=rect.height/2;
+    const ang=Math.atan2(y-cy,x-cx);
+    const theta = ang < -Math.PI/2 ? ang + 2*Math.PI : ang;
+    rows.forEach(([cat,amt],i)=>{
+      const [st,en]=rows[i].angle||[];
+      if(theta>st && theta<en){
+        popup.style.left = e.pageX + "px";
+        popup.style.top  = e.pageY + "px";
+        popup.innerHTML = `<b>${cat}</b><br>${money(amt)} (${(amt/total*100).toFixed(1)}%)`;
+        popup.style.display="block";
+      }
+    });
+  };
+  document.body.addEventListener("click",ev=>{
+    if(!donut.contains(ev.target)) popup.style.display="none";
+  }, { once:true }); // close once per draw
+}
+
+/* Refresh */
+$("refresh").addEventListener("click",()=>{ load(); /* no extra bubble here (one-time only) */ });
+
+/* Initial load */
+maybeShowOneTimeGreeting();
 load();
+
 </script>
 </body>
 </html>
