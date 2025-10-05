@@ -50,9 +50,15 @@ function withinRange(iso, from, to) {
   const d = new Date(iso);
   return d >= from && d <= to;
 }
+
+/* Truncate to 2 decimals (NO rounding) and show 2dp */
 function fmt(n) {
-  return `S$${Number(n).toFixed(2)}`;
+  const x = Number(n) || 0;
+  const sign = x < 0 ? -1 : 1;
+  const v = Math.floor(Math.abs(x) * 100) / 100;
+  return `S$${(sign * v).toFixed(2)}`;
 }
+
 function tokenizeUser(id) {
   const secret = process.env.SUMMARY_SALT || "dev-salt";
   return crypto.createHmac("sha256", secret).update(id).digest("hex").slice(0, 24);
@@ -61,14 +67,54 @@ function escape(s) {
   return String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
 }
 
-// Amount-first parser (no 'add' needed)
+/* Normalize category:
+   - keep only letters & numbers (no spaces/special chars)
+   - limit to 13 chars
+   - fallback to 'uncategorised' if empty
+*/
+function normCat(s) {
+  let t = String(s || "uncategorised");
+  t = t.replace(/[^A-Za-z0-9]/g, ""); // alphanumeric only
+  if (!t) t = "uncategorised";
+  return t.slice(0, 13);
+}
+
+/* Amount-first parser (no 'add' needed)
+   - Accepts long decimals & optional thousands
+   - Truncates to 2dp (NO rounding)
+   - Returns sanitized category via normCat()
+   Examples:
+     "23.356 movie"      -> amount 23.35, category "movie"
+     "$4.2 kopi"         -> 4.20, "kopi"
+     "1,234.567 laptop"  -> 1234.56, "laptop"
+*/
 function parseAmountFirst(text) {
-  const m = text.match(/^\s*(?:s?\$)?\s*(\d+(?:[.,]\d{1,2})?)\b\s*(.*)$/i);
+  const m = String(text).match(/^\s*(?:-?\s*s?\$)?\s*(-?[0-9][0-9,]*(?:[.][0-9]+|[,][0-9]+)?)\s*(.*)$/i);
   if (!m) return null;
-  const raw = m[1].replace(",", ".");
-  const amount = parseFloat(raw);
+
+  let num = m[1].trim();
+
+  // If both separators exist, treat comma as thousands; else single comma as decimal.
+  if (num.includes(",") && num.includes(".")) {
+    num = num.replace(/,/g, "");
+  } else {
+    num = num.replace(",", ".");
+  }
+
+  // Truncate to 2dp (no rounding)
+  if (num.includes(".")) {
+    const negative = num.startsWith("-");
+    if (negative) num = num.slice(1);
+    const [i, d = ""] = num.split(".");
+    num = (negative ? "-" : "") + i + "." + d.slice(0, 2).padEnd(2, "0");
+  } else {
+    num = num + ".00";
+  }
+
+  const amount = parseFloat(num);
   if (isNaN(amount)) return null;
-  const category = (m[2] || "uncategorised").trim() || "uncategorised";
+
+  const category = normCat((m[2] || "uncategorised").trim());
   return { amount, category };
 }
 
@@ -85,9 +131,13 @@ function rand(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-// ---- Witty Auntie Language Packs (20 each) ----
+/* ===========================
+   Witty Auntie Language Packs
+   =========================== */
 
-// Add messages split by amount tiers
+/* Add messages split by amount tiers (NORMAL / HIGH / ULTRA)
+   Each now has 40 lines.
+*/
 const ADD_NORMAL = [
   "Okay lah! {AMT} for {CAT} masuk liao ✅",
   "Recorded! {CAT} — {AMT}. Steady bompi-pi 💪",
@@ -109,7 +159,29 @@ const ADD_NORMAL = [
   "收到 (shou dao)! {AMT} for {CAT}.",
   "Mark down liao: {CAT} {AMT}. On track ah 🚶",
   "Nice one! {AMT} {CAT}. Dollar by dollar become mountain 🏔️",
+  // +20 more
+  "Settle! {CAT} {AMT}. Solid like MRT timing 🚈",
+  "Log finish — {CAT} {AMT}. Habits power lah ⚡",
+  "Auntie pat your back: {CAT} {AMT} 👏",
+  "Budget ninja move — {CAT} {AMT} 🥷",
+  "Write liao write liao: {CAT} {AMT} ✒️",
+  "Steady hands: {CAT} {AMT}. Track like pro 🧮",
+  "Eh not bad — {CAT} {AMT}. Consistency champion 🏅",
+  "Auntie save to book: {CAT} {AMT} 📘",
+  "Got record then got control — {CAT} {AMT} 🎛️",
+  "CFO vibes unlocked: {CAT} {AMT} 🧠",
+  "Auntie say can! {CAT} {AMT} ✅",
+  "Small small also count — {CAT} {AMT} 🔢",
+  "Kopi reward later — now log {CAT} {AMT} ☕",
+  "Boom, captured {CAT} {AMT}. Next! 📥",
+  "Record clean clean — {CAT} {AMT} 🧼",
+  "Auntie proud sia — {CAT} {AMT} 🥹",
+  "Today very on — {CAT} {AMT} 🔥",
+  "Cha-ching noted: {CAT} {AMT} 💳",
+  "Book balance happy — {CAT} {AMT} 😊",
+  "Track first, shiok later — {CAT} {AMT} ✨",
 ];
+
 const ADD_HIGH = [
   "Wah {AMT} for {CAT}? Today treat yourself ah 🤭",
   "Oof, {AMT} on {CAT}. Heart pain a bit or not? 🫣",
@@ -131,7 +203,29 @@ const ADD_HIGH = [
   "Treat yo’ self completed: {AMT} {CAT} 🎉",
   "Big kahuna spend: {AMT} for {CAT}. Solid lah 💪",
   "Warning light blinking a bit: {AMT} {CAT} 🚨",
+  // +20 more
+  "Today quite shiok ah — {CAT} {AMT}. Tomorrow save harder 🤝",
+  "Wallet perspiring — {AMT} for {CAT} 🥵",
+  "Auntie raise eyebrow but support — {AMT} {CAT} 🤨",
+  "Reward yourself lah — {CAT} {AMT} ✅",
+  "High tide spending — {CAT} {AMT} 🌊",
+  "Budget engine rev high — {CAT} {AMT} 🏎️",
+  "Big bite taken — {CAT} {AMT} 🍔",
+  "Glam a bit can — {CAT} {AMT} ✨",
+  "Eh careful later month end — {CAT} {AMT} 📆",
+  "Steady hand, heavy price — {CAT} {AMT} 💵",
+  "Spend got purpose then ok — {CAT} {AMT} 🎯",
+  "Once in a while good one — {CAT} {AMT} 🌈",
+  "Wah lau, still within plan? {CAT} {AMT} 📋",
+  "Pocket feel thunder — {CAT} {AMT} ⛈️",
+  "Ok lah, pamper a bit — {CAT} {AMT} 🫶",
+  "Card swipe got smoke — {CAT} {AMT} 💨",
+  "Later drink plain water balance — {CAT} {AMT} 🚰",
+  "Auntie note liao, you aim for no-spend day next ok? {AMT} {CAT} 🗓️",
+  "Use till song, don’t waste — {CAT} {AMT} 👍",
+  "Big mood purchase — {CAT} {AMT} 😎",
 ];
+
 const ADD_ULTRA = [
   "WAH LAO {AMT} for {CAT}?! Auntie need to sit down first 🪑",
   "Bank manager wave also cannot stop you: {AMT} {CAT} 🏦",
@@ -153,9 +247,30 @@ const ADD_ULTRA = [
   "Confirm got cashback? Better have — {AMT} {CAT} 💳",
   "Auntie salute — {AMT} on {CAT}. Discipline still solid 🫡",
   "After this ah, drink tap water few days ok? {AMT} {CAT} 🚰",
+  // +20 more
+  "Boss level purchase — {CAT} {AMT} 👔",
+  "Card also shock — {AMT} for {CAT} ⚡️",
+  "Auntie jaw drop but log still — {AMT} {CAT} 😮",
+  "VIP swipe detected — {CAT} {AMT} 🛂",
+  "Big wave hit wallet — {CAT} {AMT} 🌊",
+  "You unlock prestige tier — {CAT} {AMT} 🏅",
+  "Sibeh big — {CAT} {AMT}. Breathe in, breathe out 🧘",
+  "Price like roller coaster — {CAT} {AMT} 🎢",
+  "Not everyday kind — {CAT} {AMT} 📆",
+  "Confirm talk about this during CNY — {CAT} {AMT} 🧧",
+  "Budget meteor strike — {CAT} {AMT} ☄️",
+  "Wallet need spa after this — {AMT} {CAT} 🧖",
+  "Power move sia — {CAT} {AMT} 🦾",
+  "Gahmen also cannot help — {CAT} {AMT} 🏛️",
+  "Card swipe sound like thunder — {CAT} {AMT} 🔊",
+  "One step closer to minimalist — {CAT} {AMT} 🧹",
+  "Hope got warranty hor — {CAT} {AMT} 🧾",
+  "Make sure use until worth — {CAT} {AMT} ✅",
+  "Auntie respect — {CAT} {AMT} 🙇",
+  "Ok log liao, now hibernate spending a bit — {CAT} {AMT} 🐻",
 ];
 
-// Headers/footers for summaries
+/* Summary headers/footers (Week / Month) — now 40 each */
 const SUMMARY_WEEK_HEADERS = [
   "🧾 *This Week Summary*",
   "🧾 *Weekly Rundown*",
@@ -177,7 +292,29 @@ const SUMMARY_WEEK_HEADERS = [
   "🧾 *Your Week, Your $*",
   "🧾 *Week: Where Money Went*",
   "🧾 *Auntie’s Week Audit*",
+  // +20 more
+  "🧾 *Week Wallet Headlines*",
+  "🧾 *Seven-Day Spend Story*",
+  "🧾 *Weekly Cashflow Tea*",
+  "🧾 *Auntie Weekly Brief*",
+  "🧾 *Week-by-Week Tally*",
+  "🧾 *Week Damage Control*",
+  "🧾 *Wallet Pulse (Week)*",
+  "🧾 *Kopi Talk — This Week*",
+  "🧾 *Week Scorecard*",
+  "🧾 *Weekly Ledger Notes*",
+  "🧾 *Week Expense Digest*",
+  "🧾 *Seven Days, One Wallet*",
+  "🧾 *Week Snapshot*",
+  "🧾 *Weekly Spend Radar*",
+  "🧾 *Auntie Week Wrap*",
+  "🧾 *Wallet Summary (Week)*",
+  "🧾 *Weekly Money Memo*",
+  "🧾 *Week-end Audit*",
+  "🧾 *Week Budget Bulletin*",
+  "🧾 *Week Cash Chronicle*",
 ];
+
 const SUMMARY_MONTH_HEADERS = [
   "🧾 *This Month Summary*",
   "🧾 *Monthly Rundown*",
@@ -199,7 +336,29 @@ const SUMMARY_MONTH_HEADERS = [
   "🧾 *Your Month, Your $*",
   "🧾 *Month: Where Money Went*",
   "🧾 *Auntie’s Month Audit*",
+  // +20 more
+  "🧾 *Month Wallet Headlines*",
+  "🧾 *30-Day Spend Story*",
+  "🧾 *Auntie Monthly Brief*",
+  "🧾 *Monthly Cashflow Tea*",
+  "🧾 *Ledger Notes (Month)*",
+  "🧾 *Month Damage Control*",
+  "🧾 *Wallet Pulse (Month)*",
+  "🧾 *Kopi Talk — This Month*",
+  "🧾 *Monthly Scorecard*",
+  "🧾 *Expense Digest (Month)*",
+  "🧾 *Month Snapshot*",
+  "🧾 *Spend Radar (Month)*",
+  "🧾 *Auntie Month Wrap*",
+  "🧾 *Money Memo (Month)*",
+  "🧾 *Month-End Audit*",
+  "🧾 *Budget Bulletin (Month)*",
+  "🧾 *Cash Chronicle (Month)*",
+  "🧾 *Monthly Wallet Recap*",
+  "🧾 *Month Balance Sheet*",
+  "🧾 *Month Dollars Diary*",
 ];
+
 const SUMMARY_FOOTERS = [
   "Steady lah, watch your spending 💪",
   "Little by little become mountain 🏔️",
@@ -221,9 +380,30 @@ const SUMMARY_FOOTERS = [
   "Huat slowly but surely 🧧",
   "From cents to sense 🧩",
   "Auntie proud of you 🥹",
+  // +20 more
+  "Small habits, big freedom 🌱",
+  "Today control, tomorrow shiok ✨",
+  "Save first, song later 🎶",
+  "Your plan, your power 🛠️",
+  "Every dollar got job one 🗂️",
+  "Kopi treat yourself after saving ☕",
+  "Keep the streak, win the month 🏆",
+  "Budget is bestie, not enemy 🤝",
+  "Money behave, life easier 😌",
+  "Pakai brain, not impulse 🧠",
+  "You steady steady already 👍",
+  "Future you will say thanks 🙌",
+  "Auntie see liao also happy 😊",
+  "Step by step, sure can 🪜",
+  "Your wallet smiling now 😁",
+  "Discipline is sexy lah 😎",
+  "Spend with intention 🎯",
+  "Trust the process 🔁",
+  "Huat path unlocked 🧧",
+  "Power lah, continue! ⚡",
 ];
 
-// List intros
+/* List intros — now 40 */
 const LIST_HEADERS = [
   "🗃️ *Last 5 Records:*",
   "🗂️ *Most Recent Entries:*",
@@ -245,9 +425,30 @@ const LIST_HEADERS = [
   "📥 *Incoming 5:*",
   "💳 *Recent Swipes:*",
   "📨 *Latest Records:*",
+  // +20 more
+  "🧾 *Fresh Off The Press:*",
+  "📘 *Latest Wallet Lines:*",
+  "📗 *New Logbook 5:*",
+  "📙 *Recent Kopi Book:*",
+  "📔 *Just Logged:*",
+  "📓 *Quick Ledger:*",
+  "🗒️ *Newest Wallet Bits:*",
+  "🗃️ *Recent Five Items:*",
+  "📚 *Hot From Register:*",
+  "📄 *Fresh Entries Now:*",
+  "📥 *Inbox of Spending:*",
+  "🧺 *Newly Added Five:*",
+  "📎 *Wallet Clips:*",
+  "🧰 *Latest Toolkit:*",
+  "🗂️ *Recent Bundle:*",
+  "🧾 *Pocket Updates:*",
+  "📘 *Fresh Five Records:*",
+  "📗 *Recent Notes:*",
+  "📙 *Latest Snapshot:*",
+  "📓 *Tiny Ledger View:*",
 ];
 
-// Undo lines (20)
+/* Undo lines — now 40 */
 const UNDO_LINES = [
   "Undo ok: removed {AMT} for {CAT} ✅",
   "Reverse gear engaged — {CAT} {AMT} deleted 🔄",
@@ -269,9 +470,30 @@ const UNDO_LINES = [
   "Auntie tidy up — {AMT} {CAT} 🧹",
   "Unlogged successfully — {CAT} {AMT} ✅",
   "Rewind complete — {AMT} for {CAT} 🔁",
+  // +20 more
+  "Reverse siah — {CAT} {AMT} vanish 🪄",
+  "Backspace done — {CAT} {AMT} ⌫",
+  "Entry disappear like ninja — {CAT} {AMT} 🥷",
+  "Roll it back nice nice — {CAT} {AMT} 🌀",
+  "No trace left — {CAT} {AMT} 🫥",
+  "KIV cancel confirmed — {CAT} {AMT} 📌",
+  "Time stone used — {CAT} {AMT} ⏳",
+  "Gone case (on purpose) — {CAT} {AMT} 🗃️",
+  "Undo done, budget smile — {CAT} {AMT} 🙂",
+  "Rubber eraser power — {CAT} {AMT} 🧽",
+  "Back to square one — {CAT} {AMT} ◻️",
+  "History edited — {CAT} {AMT} 📝",
+  "We pretend never happen — {CAT} {AMT} 🙈",
+  "Clean swipe — {CAT} {AMT} 🧻",
+  "Roll tape back — {CAT} {AMT} 📼",
+  "Ah ok lah remove — {CAT} {AMT} 🧺",
+  "Poof and puff — {CAT} {AMT} 💨",
+  "Budget angel intervene — {CAT} {AMT} 😇",
+  "Strike-through done — {CAT} {AMT} ~~ ~~",
+  "Case closed — {CAT} {AMT} 🔒",
 ];
 
-// 20 Tips
+/* 40 Money-saving tips */
 const TIPS = [
   "💡 Before buy, ask: need or want?",
   "💡 Order kopi kosong — sugar also cost money (and health).",
@@ -293,9 +515,30 @@ const TIPS = [
   "💡 Avoid random Deliveroo — walk, eat, save.",
   "💡 Write wishlists; buy next month if still want.",
   "💡 Treat bonuses like 80% save, 20% play.",
+  // +20 more
+  "💡 Pay yourself first — savings auto GIRO.",
+  "💡 Turn off in-app impulse notifications.",
+  "💡 Buy quality once, not cheap twice.",
+  "💡 Library card beats impulse Kindle buys.",
+  "💡 Batch errands to save rides.",
+  "💡 Track subscriptions; share family plans.",
+  "💡 Learn basic repairs; save service fees.",
+  "💡 Use shopping list; stick to it.",
+  "💡 Compare unit pricing, not packaging.",
+  "💡 Freeze leftovers — rescue your wallet.",
+  "💡 Pack snack — skip overpriced kiosks.",
+  "💡 Keep emergency fund separate.",
+  "💡 Renegotiate rent/utilities politely.",
+  "💡 Use “48-hour rule” for online carts.",
+  "💡 Schedule “no-spend” days weekly.",
+  "💡 Sell clutter; one in, one out.",
+  "💡 Review insurance deductibles yearly.",
+  "💡 Track peak months; plan buffers.",
+  "💡 Avoid extended warranties except essentials.",
+  "💡 Learn to say no nicely 🙂",
 ];
 
-// Extra spice if user adds many items today
+/* Extra spice if user adds many items today — now 20 */
 const TODAY_SPICE = [
   "Today you very hardworking tracking ah 👍",
   "Wah, today your expense diary on fire 🔥",
@@ -307,9 +550,20 @@ const TODAY_SPICE = [
   "Solid logging — CFO material 🧠",
   "Sibei on — keep going 💪",
   "Tracking champion of the day 🏆",
+  // +10 more
+  "You on form today sia 🥇",
+  "Logbook pages flying 📄",
+  "Kopi points +10 ☕",
+  "Budget engine warmed up 🔥",
+  "Entry marathon — steady 🏃",
+  "Very guai today ✅",
+  "Habit bar full 💯",
+  "Discipline got muscles 💪",
+  "Future you give high-five ✋",
+  "Legendary logger status unlocked 🌟",
 ];
 
-// ---- Menu Renderer ----
+/* ---- Menu Renderer ---- */
 function renderMenu() {
   return [
     "👵 *Auntie Can Count One Menu:*",
@@ -327,7 +581,7 @@ function renderMenu() {
   ].join("\n");
 }
 
-// ---- Dynamic responders ----
+/* ---- Dynamic responders ---- */
 function addResponse(amount, category, todayCountAfter) {
   const tier = amount >= 200 ? "ULTRA" : amount >= 50 ? "HIGH" : "NORMAL";
   const base =
@@ -335,7 +589,8 @@ function addResponse(amount, category, todayCountAfter) {
     tier === "HIGH"  ? rand(ADD_HIGH)  :
                        rand(ADD_NORMAL);
 
-  let line = base.replace("{AMT}", fmt(amount)).replace("{CAT}", escape(category.toLowerCase()));
+  const safeCat = normCat(category).toLowerCase();
+  let line = base.replace("{AMT}", fmt(amount)).replace("{CAT}", escape(safeCat));
 
   // add spice if user is logging a lot today
   if (todayCountAfter >= 3) {
@@ -358,12 +613,13 @@ function listResponse(items) {
 }
 
 function undoResponse(amount, category) {
+  const safeCat = normCat(category).toLowerCase();
   return rand(UNDO_LINES)
     .replace("{AMT}", fmt(amount))
-    .replace("{CAT}", escape(category.toLowerCase()));
+    .replace("{CAT}", escape(safeCat));
 }
 
-// ---- Main Handler ----
+/* ---- Main Handler ---- */
 function handler(req, res) {
   const from = req.body.From || ""; // e.g. "whatsapp:+6591234567"
   const body = String(req.body.Body || "").trim();
@@ -395,7 +651,7 @@ function handler(req, res) {
       const last = [...user.entries].slice(-5).reverse();
       const lines = last.map((e, i) => {
         const d = new Date(e.date).toLocaleString("en-SG", { timeZone: SG_TZ, hour12: false });
-        return `${i + 1}. ${escape(e.category)} — ${fmt(e.amount)}  (${d})`;
+        return `${i + 1}. ${escape(normCat(e.category).toLowerCase())} — ${fmt(e.amount)}  (${d})`;
       });
       reply.body(listResponse(lines));
     }
@@ -423,7 +679,7 @@ function handler(req, res) {
       const totals = {};
       let total = 0;
       for (const e of entries) {
-        const cat = (e.category || "uncategorised").toLowerCase();
+        const cat = normCat(e.category || "uncategorised").toLowerCase();
         totals[cat] = (totals[cat] || 0) + Number(e.amount || 0);
         total += Number(e.amount || 0);
       }
@@ -443,7 +699,7 @@ function handler(req, res) {
     const parsed = parseAmountFirst(body);
     if (parsed) {
       const entry = {
-        category: parsed.category.toLowerCase(),
+        category: normCat(parsed.category).toLowerCase(), // store sanitized, 13-char, alnum-only
         amount: parsed.amount,
         date: new Date().toISOString(),
       };
