@@ -340,7 +340,7 @@ function summaryResponse(isMonth, lines, total, token) {
   const header = isMonth ? rand(SUMMARY_MONTH_HEADERS) : rand(SUMMARY_WEEK_HEADERS);
   const footer = rand(SUMMARY_FOOTERS);
   let out = [header, ...lines, "", `💰 *Total: ${fmt(total)}*`, footer].join("\n");
-  out += `\n\n📊 Full summary 👉 https://auntie-bot.onrender.com/summary.html?u=${token}`;
+  //out += `\n\n📊 Full summary 👉 https://auntie-bot.onrender.com/summary.html?u=${token}`;
   return out;
 }
 function listResponse(items) { const head = rand(LIST_HEADERS); return [head, ...items].join("\n"); }
