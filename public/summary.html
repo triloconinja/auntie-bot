@@ -114,11 +114,11 @@ button.primary{
 .amt{text-align:right}
 .pct{color:var(--muted);font-size:.9rem;text-align:right}
 
-/* 🔻 Recent Entries: smaller, responsive text on all screens */
+/* Recent Entries: smaller, responsive text */
 .table-recent th,.table-recent td{
   font-size: clamp(.76rem, .70rem + .28vw, .92rem);
   line-height: 1.15;
-  padding: 8px 10px;         /* tighter rows */
+  padding: 8px 10px;
 }
 .table-recent .amt{ font-variant-numeric: tabular-nums; }
 
@@ -137,6 +137,37 @@ canvas{width:100% !important;height:auto !important}
   color:#6E2B20; display:none; animation:fadeIn .4s ease;
 }
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Floating bookmark FAB + feedback panel */
+#feedbackFab{
+  position:fixed; right:16px; bottom:96px;
+  width:48px; height:48px; border-radius:12px;
+  background:linear-gradient(180deg,#F6FBFF 0%, #EAF6FF 100%);
+  border:1px solid #D9E7F5; box-shadow:var(--shadow);
+  display:grid; place-items:center; cursor:pointer; z-index:1100;
+}
+#feedbackFab svg{width:22px;height:22px;stroke:#2563eb;fill:none;stroke-width:2;}
+#feedbackPanel{
+  position:fixed; right:16px; bottom:160px; z-index:1100;
+  width:min(380px,92vw); background:#fff; color:var(--ink);
+  border:1px solid var(--ring); border-radius:16px; box-shadow:var(--shadow);
+  padding:14px; opacity:0; transform:translateY(8px);
+  pointer-events:none; transition:opacity .25s ease, transform .25s ease;
+}
+#feedbackPanel.open{ opacity:1; transform:translateY(0); pointer-events:auto; }
+#feedbackPanel h4{ margin:0 0 8px; font-size:1rem; color:#6E2B20; }
+#feedbackPanel textarea{
+  width:100%; min-height:110px; resize:vertical;
+  border:1px solid var(--ring); border-radius:12px; padding:10px;
+  font-family:inherit; font-size:.95rem; background:#FFFEFD;
+}
+#feedbackPanel .row{display:flex; gap:8px; margin-top:10px;}
+#feedbackPanel button{
+  background:linear-gradient(180deg,#DFF6E7 0%,#CDEEDA 100%);
+  border:1px solid #BFE7CD; color:#165534; font-weight:700;
+  padding:10px 14px; border-radius:12px; cursor:pointer;
+}
+#fbStatus{ color:var(--muted); font-size:.9rem; margin-left:6px; align-self:center; }
 
 /* Mobile: Summary full width, other two side-by-side */
 @media (max-width: 680px){
@@ -225,7 +256,6 @@ canvas{width:100% !important;height:auto !important}
 
     <div class="card list">
       <div class="section-title">Recent Entries</div>
-      <!-- 👇 added .table-recent -->
       <table class="table table-recent" aria-label="Recent entries">
         <thead><tr><th>#</th><th>When (SGT)</th><th>Category</th><th class="amt">Amount</th></tr></thead>
         <tbody id="recent"></tbody>
@@ -240,6 +270,19 @@ canvas{width:100% !important;height:auto !important}
 <!-- Tooltip + one-time bubble -->
 <div id="popup"></div>
 <div id="auntie-bubble"></div>
+
+<!-- Floating bookmark FAB + Feedback Panel -->
+<button id="feedbackFab" aria-label="Feedback">
+  <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg>
+</button>
+<div id="feedbackPanel" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
+  <h4 id="fbTitle">Feedback to Auntie</h4>
+  <textarea id="fbText" placeholder="Tell Auntie what to improve…"></textarea>
+  <div class="row">
+    <button id="fbSubmit">Submit</button>
+    <span id="fbStatus" aria-live="polite"></span>
+  </div>
+</div>
 
 <script>
 /* ========= Helpers ========= */
@@ -394,6 +437,62 @@ document.querySelector("#exportMenu #exportCsv").addEventListener("click",()=> e
 document.querySelector("#exportMenu #exportXls").addEventListener("click",()=> exportExcel(window.__rows||[]));
 document.querySelector("#exportMenu #exportPdf").addEventListener("click",()=> exportPDF(window.__rows||[]));
 
+/* Feedback: open/close + submit */
+const fbFab = $("feedbackFab");
+const fbPanel = $("feedbackPanel");
+const fbText = $("fbText");
+const fbSubmit = $("fbSubmit");
+const fbStatus = $("fbStatus");
+
+fbFab.addEventListener("click", () => {
+  fbPanel.classList.toggle("open");
+  if (fbPanel.classList.contains("open")) fbText.focus();
+});
+
+document.addEventListener("click", (e)=>{
+  if (!fbPanel.contains(e.target) && !fbFab.contains(e.target)) {
+    fbPanel.classList.remove("open");
+  }
+});
+document.addEventListener("keydown", (e)=>{
+  if (e.key === "Escape") fbPanel.classList.remove("open");
+});
+
+fbSubmit.addEventListener("click", async ()=>{
+  const msg = fbText.value.trim();
+  if (!msg) { fbStatus.textContent = "Write something first 😉"; return; }
+  fbSubmit.disabled = true; fbStatus.textContent = "Sending…";
+  const ok = await sendFeedback(msg);
+  fbStatus.textContent = ok.server ? "Thanks! Sent to Auntie ✅" : "Saved locally ✅";
+  fbText.value = "";
+  fbSubmit.disabled = false;
+  setTimeout(()=>{ fbPanel.classList.remove("open"); fbStatus.textContent=""; }, 1200);
+});
+
+/* Try server first, fallback to localStorage */
+async function sendFeedback(message){
+  try{
+    const res = await fetch("/api/feedback", {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({
+        u: token || null,
+        message,
+        page: "summary",
+        at: new Date().toISOString()
+      })
+    });
+    if(!res.ok) throw new Error("not ok");
+    return { ok:true, server:true };
+  }catch(e){
+    const key="auntie_feedback_local";
+    const list = JSON.parse(localStorage.getItem(key) || "[]");
+    list.push({ u: token||null, message, page:"summary", at:new Date().toISOString() });
+    localStorage.setItem(key, JSON.stringify(list));
+    return { ok:true, server:false };
+  }
+}
+
 /* main load */
 async function load(forceRange){
   const data=await fetchSummary(); if(!data) return;
@@ -466,7 +565,6 @@ async function load(forceRange){
 $("refresh").addEventListener("click",()=>{ load(); });
 maybeShowOneTimeGreeting();
 load();
-
 window.addEventListener("resize",()=>{ if(window.__rows){ drawDonut($("donut"), window.__rows, window.__rows.reduce((s,[,a])=>s+a,0)); }});
 </script>
 </body>

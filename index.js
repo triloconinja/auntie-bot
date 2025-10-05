@@ -450,6 +450,55 @@ if (authToken) {
   app.post("/whatsapp", handler); // dev fallback
 }
 
+
+// ---- Feedback API (JSON-in, stored in data.json) ----
+app.post("/api/feedback", express.json(), (req, res) => {
+  try {
+    const { u, message, page, at } = req.body || {};
+    if (typeof message !== "string" || !message.trim()) {
+      return res.status(400).json({ error: "message is required" });
+    }
+
+    // keep message sane
+    const safeMsg = message.trim().slice(0, 2000);
+
+    // simple id
+    const id =
+      (crypto.randomUUID && crypto.randomUUID()) ||
+      crypto
+        .createHash("sha1")
+        .update(`${Date.now()}-${Math.random()}`)
+        .digest("hex")
+        .slice(0, 12);
+
+    // record
+    const rec = {
+      id,
+      token: typeof u === "string" ? u : null,
+      page: typeof page === "string" ? page : "summary",
+      message: safeMsg,
+      atClient: typeof at === "string" ? at : null,
+      atServer: new Date().toISOString(),
+      ip:
+        (req.headers["x-forwarded-for"] &&
+          String(req.headers["x-forwarded-for"]).split(",")[0].trim()) ||
+        (req.socket && req.socket.remoteAddress) ||
+        null,
+    };
+
+    const all = readData();
+    if (!all.feedback) all.feedback = [];
+    all.feedback.push(rec);
+    writeData(all);
+
+    return res.status(201).json({ ok: true, id });
+  } catch (err) {
+    console.error("feedback error:", err);
+    return res.status(500).json({ error: "failed to save feedback" });
+  }
+});
+
+
 // ---- Minimal read-only summary API (by token) ----
 app.get("/api/summary", (req, res) => {
   const token = String(req.query.u || "");
@@ -465,6 +514,9 @@ app.get("/api/summary", (req, res) => {
     generatedAt: new Date().toISOString(),
   });
 });
+
+
+
 
 // ---- Health & Root ----
 app.get("/", (_req, res) => res.type("text/plain").send("Auntie Can Count One is online 👵"));
