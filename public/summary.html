@@ -7,7 +7,7 @@
 
 <style>
 :root{
-  /* Pantone-inspired palette */
+  /* Pantone palette */
   --desert-flower:#E98C7A;
   --blue-curacao:#58B8C7;
   --opera-mauve:#C17BA3;
@@ -16,20 +16,18 @@
   --cattleya-orchid:#8E3D79;
 
   /* UI */
-  --bg:#FFF9F6;     /* airy background */
+  --bg:#FFF9F6;
   --ink:#1F2328;
   --muted:#6B7280;
   --ring:#F0E6DE;
   --shadow:0 10px 24px rgba(0,0,0,.06);
 
   /* “Dirty white” panel tints */
-  --panel-kpi:#F9F6F4;        /* warm off-white */
-  --panel-viz:#F7FAFA;        /* cool off-white */
-  --panel-breakdown:#F9F6F8;  /* mauve off-white */
-  --panel-list:#FAF8F4;       /* mustard off-white */
+  --panel-kpi:#F9F6F4;
+  --panel-viz:#F7FAFA;
+  --panel-breakdown:#F9F6F8;
+  --panel-list:#FAF8F4;
 }
-
-/* Reset / base */
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial;
@@ -41,7 +39,6 @@ body{
   overflow-x:hidden;
 }
 .app{max-width:1100px;margin:auto;padding:20px clamp(14px,3vw,24px) 40px;display:grid;gap:16px;}
-
 /* Top bar */
 .topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
 .brand{display:flex;align-items:center;gap:12px;}
@@ -51,7 +48,8 @@ body{
   display:grid;place-items:center;box-shadow:var(--shadow);
 }
 .logo svg{width:30px;height:30px;stroke:#2B2B2B;fill:none;stroke-width:2;}
-
+h1{margin:0;font-size:clamp(1.1rem,1vw+1rem,1.5rem);color:var(--mocha-mousse);}
+.sub{margin:0;color:var(--muted);font-size:.95rem}
 /* Controls */
 .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
 .dropdown{position:relative}
@@ -94,16 +92,13 @@ button.primary{
   border:1px solid var(--ring); border-radius:16px;
   box-shadow:var(--shadow); padding:16px;
 }
-.kpi h3{margin-bottom:4px; font-size:.9rem; color:var(--muted);}
-.value{font-weight:800;font-size:1.4rem;color:var(--ink);}
-
-.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));}
-.card{
-  border:1px solid var(--ring); border-radius:16px; box-shadow:var(--shadow); padding:20px;
-}
-.viz{background:var(--panel-viz);}
-.breakdown{background:var(--panel-breakdown);}
-.list{background:var(--panel-list);}
+.kpi h3{margin-bottom:4px;font-size:.9rem;color:var(--muted)}
+.value{font-weight:800;font-size:1.4rem;color:var(--ink)}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.card{border:1px solid var(--ring);border-radius:16px;box-shadow:var(--shadow);padding:20px}
+.viz{background:var(--panel-viz)}
+.breakdown{background:var(--panel-breakdown)}
+.list{background:var(--panel-list)}
 .section-title{margin-bottom:10px;font-weight:800;color:#6E2B20}
 
 /* Tables */
@@ -132,175 +127,183 @@ canvas{width:100% !important;height:auto !important}
 </head>
 
 <body>
-  <div class="app">
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo" aria-label="Auntie logo">
-          <!-- simple friendly “auntie” placeholder icon (inline SVG; replace later easily) -->
-          <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
-            <circle cx="32" cy="32" r="28" />
-            <circle cx="32" cy="26" r="10" />
-            <path d="M18 48c8-10 20-10 28 0" />
-          </svg>
-        </div>
-        <div>
-          <h1>Auntie Can Count One — Summary</h1>
-          <p class="sub">Pastel Pantone dashboard. Donut so tiny but shiok 🍩</p>
-        </div>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo" aria-label="Auntie logo">
+        <!-- simple friendly auntie placeholder (swap anytime) -->
+        <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+          <circle cx="32" cy="32" r="28"/>
+          <circle cx="32" cy="26" r="10"/>
+          <path d="M18 48c8-10 20-10 28 0"/>
+        </svg>
       </div>
-
-      <div class="controls">
-        <!-- Range dropdown -->
-        <div class="dropdown" id="rangeDrop">
-          <div class="dropdown-btn" id="rangeBtn">This Week ▾</div>
-          <div class="dropdown-menu" id="rangeMenu">
-            <div class="dropdown-item" data-range="week">This Week</div>
-            <div class="dropdown-item" data-range="month">This Month</div>
-            <div class="dropdown-item" data-range="all">All Time</div>
-          </div>
-        </div>
-
-        <!-- Export dropdown -->
-        <div class="dropdown" id="exportDrop">
-          <div class="dropdown-btn" id="exportBtn">Export ▾</div>
-          <div class="dropdown-menu" id="exportMenu">
-            <div class="dropdown-item" id="exportCsv">📄 CSV</div>
-            <div class="dropdown-item" id="exportXls">📊 Excel</div>
-            <div class="dropdown-item" id="exportPdf">🖨️ PDF</div>
-          </div>
-        </div>
-
-        <button id="refresh" class="primary">Refresh</button>
-        <span id="status" class="meta"></span>
+      <div>
+        <h1>Auntie Can Count One — Summary</h1>
+        <p class="sub">Pastel Pantone dashboard. Donut so tiny but shiok 🍩</p>
       </div>
     </div>
 
-    <!-- KPIs -->
-    <div class="kpis">
-      <div class="kpi">
-        <h3 id="hdr">🧾 Summary</h3>
-        <div id="kpi-total" class="value">S$0.00</div>
-        <div id="kpi-meta" class="meta">—</div>
+    <div class="controls">
+      <!-- Range dropdown -->
+      <div class="dropdown" id="rangeDrop">
+        <div class="dropdown-btn" id="rangeBtn">This Week ▾</div>
+        <div class="dropdown-menu" id="rangeMenu">
+          <div class="dropdown-item" data-range="week">This Week</div>
+          <div class="dropdown-item" data-range="month">This Month</div>
+          <div class="dropdown-item" data-range="all">All Time</div>
+        </div>
       </div>
-      <div class="kpi">
-        <h3>📦 Categories</h3>
-        <div id="kpi-cats" class="value">0</div>
+
+      <!-- Export dropdown -->
+      <div class="dropdown" id="exportDrop">
+        <div class="dropdown-btn" id="exportBtn">Export ▾</div>
+        <div class="dropdown-menu" id="exportMenu">
+          <div class="dropdown-item" id="exportCsv">📄 CSV</div>
+          <div class="dropdown-item" id="exportXls">📊 Excel</div>
+          <div class="dropdown-item" id="exportPdf">🖨️ PDF</div>
+        </div>
       </div>
-      <div class="kpi">
-        <h3>🗓️ Entries</h3>
-        <div id="kpi-entries" class="value">0</div>
-      </div>
+
+      <button id="refresh" class="primary">Refresh</button>
+      <span id="status" class="meta"></span>
     </div>
-
-    <!-- Panels -->
-    <div class="grid">
-      <div class="card viz">
-        <div class="section-title">Category Donut</div>
-        <canvas id="donut" aria-label="Spending donut chart"></canvas>
-        <div id="legend" class="legend"></div>
-      </div>
-
-      <div class="card breakdown">
-        <div class="section-title">Breakdown</div>
-        <table class="table" aria-label="Category breakdown table">
-          <thead>
-            <tr><th>Category</th><th class="amt">Amount</th><th class="pct">Share</th></tr>
-          </thead>
-          <tbody id="tbl"></tbody>
-        </table>
-      </div>
-
-      <div class="card list">
-        <div class="section-title">Recent Entries</div>
-        <table class="table" aria-label="Recent entries">
-          <thead>
-            <tr><th>#</th><th>When (SGT)</th><th>Category</th><th class="amt">Amount</th></tr>
-          </thead>
-          <tbody id="recent"></tbody>
-        </table>
-        <p id="empty" class="meta" hidden>No records yet lah 😅</p>
-      </div>
-    </div>
-
-    <div class="meta" id="generatedAt"></div>
   </div>
 
-  <!-- Tooltip + one-time bubble -->
-  <div id="popup"></div>
-  <div id="auntie-bubble"></div>
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi">
+      <h3 id="hdr">🧾 Summary</h3>
+      <div id="kpi-total" class="value">S$0.00</div>
+      <div id="kpi-meta" class="meta">—</div>
+    </div>
+    <div class="kpi">
+      <h3>📦 Categories</h3>
+      <div id="kpi-cats" class="value">0</div>
+    </div>
+    <div class="kpi">
+      <h3>🗓️ Entries</h3>
+      <div id="kpi-entries" class="value">0</div>
+    </div>
+  </div>
+
+  <!-- Panels -->
+  <div class="grid">
+    <div class="card viz">
+      <div class="section-title">Category Donut</div>
+      <canvas id="donut" aria-label="Spending donut chart"></canvas>
+      <div id="legend" class="legend"></div>
+    </div>
+
+    <div class="card breakdown">
+      <div class="section-title">Breakdown</div>
+      <table class="table" aria-label="Category breakdown table">
+        <thead><tr><th>Category</th><th class="amt">Amount</th><th class="pct">Share</th></tr></thead>
+        <tbody id="tbl"></tbody>
+      </table>
+    </div>
+
+    <div class="card list">
+      <div class="section-title">Recent Entries</div>
+      <table class="table" aria-label="Recent entries">
+        <thead><tr><th>#</th><th>When (SGT)</th><th>Category</th><th class="amt">Amount</th></tr></thead>
+        <tbody id="recent"></tbody>
+      </table>
+      <p id="empty" class="meta" hidden>No records yet lah 😅</p>
+    </div>
+  </div>
+
+  <div class="meta" id="generatedAt"></div>
+</div>
+
+<!-- Tooltip + one-time bubble -->
+<div id="popup"></div>
+<div id="auntie-bubble"></div>
 
 <script>
-/* ===== Helpers & constants ===== */
+/* ========= Helpers ========= */
 const SG_TZ="Asia/Singapore";
 const token=new URLSearchParams(location.search).get("u");
 const $=id=>document.getElementById(id);
-const money=n=>"S$"+Number(n).toFixed(2);
+
+/* rounding + formatting */
+const STEP=0.10;
+const roundToStep=(n,step=STEP)=>Math.round((Number(n)||0)/step)*step;
+const money=n=>"S$"+roundToStep(n).toFixed(2);
+
+const capFirst=s=>{s=String(s||"uncategorised").trim();return s? s[0].toUpperCase()+s.slice(1):s;};
+const truncDonut=s=>{s=capFirst(s);return s.length>10? s.slice(0,10)+"...":s;};
+const truncBreakdown=s=>{s=capFirst(s);return s.length>12? s.slice(0,12):s;};
+const truncRecent=s=>{s=capFirst(s);return s.length>13? s.slice(0,13):s;};
+
 const donutPalette=["#E98C7A","#58B8C7","#C17BA3","#8E3D79","#D1AE3A","#9B6B58"];
 
-/* One-time greeting per page load: use a flag scoped to this page */
+/* one-time greeting per load */
 function maybeShowOneTimeGreeting(){
-  if (!sessionStorage.getItem("auntie_greeted")) {
+  if(!sessionStorage.getItem("auntie_greeted")){
     showBubble("Steady lah 💪 track first then spend!");
     sessionStorage.setItem("auntie_greeted","1");
   }
 }
 function showBubble(msg){
-  const b=$("auntie-bubble");
-  b.textContent=msg; b.style.display="block";
-  setTimeout(()=>{ b.style.display="none"; }, 6000); // 6 seconds
+  const b=$("auntie-bubble"); b.textContent=msg; b.style.display="block";
+  setTimeout(()=>b.style.display="none",6000);
 }
 
-/* Fetch your summary (keep existing API contract) */
+/* data */
 async function fetchSummary(){
   if(!token){$("status").textContent="No token found lah 😅";return null;}
   try{
     $("status").textContent="Fetching…";
     const res=await fetch(`/api/summary?u=${encodeURIComponent(token)}&_=${Date.now()}`);
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data=await res.json();
-    $("status").textContent=""; return data;
+    const data=await res.json(); $("status").textContent=""; return data;
   }catch(e){ console.error(e); $("status").textContent="Error 😢"; return null; }
 }
 
-/* Donut drawing (responsive, crisp) */
+/* donut sizing + draw + state for hit-test */
+const donutState={cx:0,cy:0,innerR:0,outerR:0,rows:[]};
 function sizeCanvasForDisplay(c){
   const ratio=window.devicePixelRatio||1;
-  const cssW=c.clientWidth, cssH=Math.max(220, c.clientWidth*0.62); // nice aspect; mobile full width
-  c.style.height = cssH+"px";
+  const cssW=c.clientWidth, cssH=Math.max(220, c.clientWidth*0.62);
+  c.style.height=cssH+"px";
   c.width=Math.floor(cssW*ratio); c.height=Math.floor(cssH*ratio);
-  const ctx=c.getContext('2d'); ctx.setTransform(ratio,0,0,ratio,0,0); return ctx;
+  const ctx=c.getContext('2d'); ctx.setTransform(ratio,0,0,ratio,0,0);
+  return ctx;
 }
 function drawDonut(c,rows,total){
   const ctx=sizeCanvasForDisplay(c);
   const W=c.clientWidth, H=c.clientHeight;
   ctx.clearRect(0,0,W,H);
   const cx=W/2, cy=H/2, outerR=Math.min(W,H)*0.42, innerR=outerR*0.6;
+  donutState.cx=cx; donutState.cy=cy; donutState.outerR=outerR; donutState.innerR=innerR; donutState.rows=rows;
+
   let start=-Math.PI/2;
   rows.forEach(([cat,amt],i)=>{
-    const frac=total?amt/total:0, angle=frac*Math.PI*2, end=start+angle;
+    const frac=total? amt/total:0, angle=frac*Math.PI*2, end=start+angle;
     ctx.beginPath(); ctx.moveTo(cx,cy);
     ctx.arc(cx,cy,outerR,start,end); ctx.lineTo(cx,cy);
     ctx.fillStyle=donutPalette[i%donutPalette.length]; ctx.fill();
     rows[i].angle=[start,end]; start=end;
   });
-  // hole
+
   ctx.globalCompositeOperation="destination-out";
   ctx.beginPath(); ctx.arc(cx,cy,innerR,0,Math.PI*2); ctx.fill();
   ctx.globalCompositeOperation="source-over";
-  // center label
+
   ctx.fillStyle="#5B3B33"; ctx.textAlign="center";
   ctx.font="700 14px ui-sans-serif"; ctx.fillText("Total",cx,cy-10);
   ctx.font="800 20px ui-sans-serif"; ctx.fillText(money(total),cx,cy+16);
 }
 
-/* Renderers */
+/* renderers */
 function renderLegend(rows){
   const legend=$("legend"); legend.innerHTML="";
   rows.forEach(([cat],i)=>{
     const tag=document.createElement("div"); tag.className="tag";
     const dot=document.createElement("span"); dot.className="dot";
     dot.style.background=donutPalette[i%donutPalette.length];
-    const label=document.createElement("span"); label.textContent=cat;
+    const label=document.createElement("span"); label.textContent=truncDonut(cat);
     tag.append(dot,label); legend.appendChild(tag);
   });
 }
@@ -308,46 +311,47 @@ function renderTable(rows,total){
   const tbody=$("tbl"); tbody.innerHTML="";
   rows.forEach(([cat,amt],i)=>{
     const tr=document.createElement("tr");
-    tr.innerHTML=`<td><span style="display:inline-flex;align-items:center;gap:8px">
-      <span style="width:10px;height:10px;border-radius:3px;background:${donutPalette[i%donutPalette.length]}"></span>
-      ${cat}</span></td>
+    tr.innerHTML=`
+      <td><span style="display:inline-flex;align-items:center;gap:8px">
+        <span style="width:10px;height:10px;border-radius:3px;background:${donutPalette[i%donutPalette.length]}"></span>
+        ${truncBreakdown(cat)}
+      </span></td>
       <td class="amt">${money(amt)}</td>
-      <td class="pct">${total?(amt/total*100).toFixed(1)+'%':'—'}</td>`;
+      <td class="pct">${total?(amt/total*100).toFixed(1)+"%":"—"}</td>`;
     tbody.appendChild(tr);
   });
 }
 function renderRecent(entries){
   const tbody=$("recent"); tbody.innerHTML="";
-  if(!entries.length){ $("empty").hidden=false; return; }
+  if(!entries.length){$("empty").hidden=false; return;}
   $("empty").hidden=true;
   entries.slice(-10).reverse().forEach((e,i)=>{
     const tr=document.createElement("tr");
     tr.innerHTML=`<td>${i+1}</td>
       <td>${new Date(e.date).toLocaleString("en-SG",{timeZone:SG_TZ,hour12:false})}</td>
-      <td>${e.category||'uncategorised'}</td>
+      <td>${truncRecent(e.category||"uncategorised")}</td>
       <td class="amt">${money(e.amount||0)}</td>`;
     tbody.appendChild(tr);
   });
 }
 
-/* Export helpers */
+/* Exports (use rounded rows) */
 function exportCSV(rows){
   const d=new Date().toISOString().slice(0,10);
-  let csv="Category,Amount\n"; rows.forEach(([c,a])=>csv+=`${c},${a}\n`);
+  let csv="Category,Amount\n"; rows.forEach(([c,a])=>csv+=`${capFirst(c)},${roundToStep(a).toFixed(2)}\n`);
   const blob=new Blob([csv],{type:"text/csv"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download=`auntie-summary-${d}.csv`; a.click();
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`auntie-summary-${d}.csv`; a.click();
 }
-function exportExcel(rows){ exportCSV(rows); } // lightweight .xls via CSV
+function exportExcel(rows){ exportCSV(rows); }
 function exportPDF(rows){
   const d=new Date().toISOString().slice(0,10);
   const w=window.open("","","width=720,height=820");
   w.document.write("<h3>Auntie Can Count Summary</h3><table border=1 cellspacing=0 cellpadding=6><tr><th>Category</th><th>Amount</th></tr>");
-  rows.forEach(([c,a])=>w.document.write(`<tr><td>${c}</td><td>${money(a)}</td></tr>`));
+  rows.forEach(([c,a])=>w.document.write(`<tr><td>${capFirst(c)}</td><td>${roundToStep(a).toFixed(2)}</td></tr>`));
   w.document.write("</table>"); w.print(); w.close();
 }
 
-/* Dropdowns */
+/* dropdowns */
 function toggleDrop(el){
   el.classList.toggle("open");
   document.querySelectorAll(".dropdown").forEach(d=>{ if(d!==el) d.classList.remove("open"); });
@@ -358,7 +362,6 @@ document.body.addEventListener("click",e=>{
 document.querySelectorAll(".dropdown-btn").forEach(btn=>{
   btn.addEventListener("click",e=>{ toggleDrop(btn.closest(".dropdown")); e.stopPropagation(); });
 });
-
 document.querySelectorAll("#rangeMenu .dropdown-item").forEach(it=>{
   it.addEventListener("click",()=>{
     $("rangeBtn").textContent = it.textContent + " ▾";
@@ -370,15 +373,15 @@ document.querySelector("#exportMenu #exportCsv").addEventListener("click",()=> e
 document.querySelector("#exportMenu #exportXls").addEventListener("click",()=> exportExcel(window.__rows||[]));
 document.querySelector("#exportMenu #exportPdf").addEventListener("click",()=> exportPDF(window.__rows||[]));
 
-/* Main load */
+/* main load */
 async function load(forceRange){
   const data=await fetchSummary(); if(!data) return;
 
-  $("generatedAt").textContent = "Generated at: " +
-    new Date(data.generatedAt||Date.now()).toLocaleString("en-SG",{timeZone:SG_TZ,hour12:false});
+  $("generatedAt").textContent="Generated at: "+new Date(data.generatedAt||Date.now())
+    .toLocaleString("en-SG",{timeZone:SG_TZ,hour12:false});
 
   const label=$("rangeBtn").textContent.toLowerCase();
-  const range = forceRange || (label.includes("month")?"month": label.includes("all")?"all":"week");
+  const range = forceRange || (label.includes("month")?"month":label.includes("all")?"all":"week");
 
   const entries=data.entries||[];
   const now=new Date();
@@ -392,51 +395,70 @@ async function load(forceRange){
     scoped=entries.filter(e=>new Date(e.date)>=start);
   }
 
-  const byCat={}; let total=0;
-  scoped.forEach(e=>{const c=e.category||"uncategorised";const a=+e.amount||0; byCat[c]=(byCat[c]||0)+a; total+=a;});
-  const rows=Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
-  window.__rows = rows; // for exports
+  /* Aggregate with rounding per category */
+  const byCat={}; let totalRaw=0;
+  scoped.forEach(e=>{ const key=(e.category||"uncategorised").trim(); const amt=Number(e.amount||0); byCat[key]=(byCat[key]||0)+amt; totalRaw+=amt; });
+  const rows=Object.entries(byCat).map(([cat,amt])=>[cat, roundToStep(amt)]).sort((a,b)=>b[1]-a[1]);
+  const total=rows.reduce((s,[,a])=>s+a,0);
+  window.__rows=rows;
 
   // KPIs
   $("kpi-total").textContent=money(total);
   $("kpi-cats").textContent=rows.length;
   $("kpi-entries").textContent=scoped.length;
-  $("hdr").textContent = range==="month"?"🧾 This Month Summary": range==="all"?"🧾 All-Time Summary":"🧾 This Week Summary";
-  $("kpi-meta").textContent = range==="month"?"This month total":range==="all"?"All-time total":"This week total";
+  $("hdr").textContent=range==="month"?"🧾 This Month Summary":range==="all"?"🧾 All-Time Summary":"🧾 This Week Summary";
+  $("kpi-meta").textContent=range==="month"?"This month total":range==="all"?"All-time total":"This week total";
 
-  // Render UI
-  renderLegend(rows); renderTable(rows,total); renderRecent(scoped); drawDonut($("donut"),rows,total);
+  // Render
+  renderLegend(rows);
+  renderTable(rows,total);
+  renderRecent(scoped);
+  drawDonut($("donut"),rows,total);
 
-  // Donut tooltip (click)
+  // DONUT INTERACTION: show only when tapping a slice; otherwise hide
   const donut=$("donut"), popup=$("popup");
   donut.onclick = (e)=>{
     const rect=donut.getBoundingClientRect();
     const x=e.clientX-rect.left, y=e.clientY-rect.top;
     const cx=rect.width/2, cy=rect.height/2;
-    const ang=Math.atan2(y-cy,x-cx);
-    const theta = ang < -Math.PI/2 ? ang + 2*Math.PI : ang;
+    const dx=x-cx, dy=y-cy;
+    const r=Math.hypot(dx,dy);
+
+    // Hit-test: must be within the ring (between inner and outer radii)
+    const inner=donutState.innerR, outer=donutState.outerR;
+    if(r<inner || r>outer){ popup.style.display="none"; return; }
+
+    // Angle calc in canvas space
+    let ang=Math.atan2(dy,dx); if(ang<-Math.PI/2) ang+=2*Math.PI;
+
+    let shown=false;
     rows.forEach(([cat,amt],i)=>{
-      const [st,en]=rows[i].angle||[];
-      if(theta>st && theta<en){
-        popup.style.left = e.pageX + "px";
-        popup.style.top  = e.pageY + "px";
-        popup.innerHTML = `<b>${cat}</b><br>${money(amt)} (${(amt/total*100).toFixed(1)}%)`;
+      const seg=rows[i].angle||[];
+      if(seg.length===2 && ang>seg[0] && ang<seg[1]){
+        popup.style.left=e.pageX+"px";
+        popup.style.top=e.pageY+"px";
+        popup.innerHTML=`<b>${truncDonut(cat)}</b><br>${money(amt)} (${(amt/total*100).toFixed(1)}%)`;
         popup.style.display="block";
+        shown=true;
       }
     });
+    if(!shown) popup.style.display="none";
   };
-  document.body.addEventListener("click",ev=>{
-    if(!donut.contains(ev.target)) popup.style.display="none";
-  }, { once:true }); // close once per draw
+
+  // Hide popup when tapping anywhere outside the donut
+  const hidePopup = (ev)=>{ if(!donut.contains(ev.target)) popup.style.display="none"; };
+  document.addEventListener("click", hidePopup, { once:true });
 }
 
-/* Refresh */
-$("refresh").addEventListener("click",()=>{ load(); /* no extra bubble here (one-time only) */ });
+/* Refresh button */
+$("refresh").addEventListener("click",()=>{ load(); /* bubble does not re-trigger here */ });
 
-/* Initial load */
+/* Init */
 maybeShowOneTimeGreeting();
 load();
 
+/* Re-draw donut responsively on resize */
+window.addEventListener("resize",()=>{ if(window.__rows){ drawDonut($("donut"), window.__rows, window.__rows.reduce((s,[,a])=>s+a,0)); }});
 </script>
 </body>
 </html>
