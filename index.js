@@ -21,6 +21,53 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 const authToken = process.env.TWILIO_AUTH_TOKEN; // if present, we validate Twilio signatures
 
+// ----- Amount parsing + validation helpers -----
+
+/**
+ * Parse a number from free-form text, accepting commas as thousand separators.
+ * Keeps dot as the decimal separator (e.g., "12,345.67" -> 12345.67).
+ * Returns NaN if no numeric token is found.
+ */
+function parseAmountFlexible(text) {
+  if (typeof text !== "string") return NaN;
+  // remove commas that are used as thousands separators
+  const cleaned = text.replace(/,/g, "");
+  // grab the first number-looking token (supports negatives, 2dp)
+  const m = cleaned.match(/-?\d+(?:\.\d{1,2})?/);
+  return m ? Number(m[0]) : NaN;
+}
+
+/**
+ * Validate amount against business rules:
+ * - Must be a finite number
+ * - Must be < 1,000,000 (hard reject if >= 1,000,000)
+ * - If > 99,000 (but less than 1,000,000), warn with Auntie’s Singlish
+ *
+ * Returns { ok: boolean, errorMsg?: string, warnMsg?: string, amount:number }
+ */
+function validateAmount(amount) {
+  const amt = Number(amount);
+  if (!Number.isFinite(amt)) {
+    return { ok: false, errorMsg: "Aiyo, Auntie cannot find a valid amount. Please type something like: *Food 12.50*." };
+  }
+  if (amt >= 1_000_000) {
+    return {
+      ok: false,
+      errorMsg:
+        "Aiyo cannot lah — Auntie only accepts amounts *below S$1,000,000*. Please key in a smaller amount."
+    };
+  }
+  if (amt > 99_000) {
+    return {
+      ok: true,
+      warnMsg:
+        "Wah big spender ah! Where you get this kind of money — *money laundering ah?* 🤨 You sure you have this amount? *Don’t bluff* in Singlish."
+    };
+  }
+  return { ok: true, amount: amt };
+}
+
+
 // ---- Data Store (simple JSON; consider SQLite for prod) ----
 const dataDir = "./public";
 const dataFile = path.join(dataDir, "data.json");
@@ -57,13 +104,22 @@ function withinRange(iso, from, to) {
   return d >= from && d <= to;
 }
 
+
 /* Truncate to 2 decimals (NO rounding) and show 2dp */
 function fmt(n) {
   const x = Number(n) || 0;
   const sign = x < 0 ? -1 : 1;
   const v = Math.floor(Math.abs(x) * 100) / 100;
-  return `S$${(sign * v).toFixed(2)}`;
+
+  // Thousands separators with 2dp
+  const withCommas = new Intl.NumberFormat("en-SG", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(sign * v);
+
+  return `S$${withCommas}`;
 }
+
 
 function tokenizeUser(id) {
   const secret = process.env.SUMMARY_SALT || "dev-salt";
@@ -251,7 +307,7 @@ const ADD_HIGH = [
   "Later drink plain water balance — {CAT} {AMT} 🚰",
   "Note liao; aim no-spend day next ok? {AMT} {CAT} 🗓️",
   "Use till song, don’t waste — {CAT} {AMT} 👍",
-  "Big mood purchase — {CAT} {AMT} 😎",
+  "Big mood purchase — {AMT} {CAT} 😎",
 ];
 
 const ADD_ULTRA = [
@@ -293,17 +349,17 @@ const ADD_ULTRA = [
   "One step closer to minimalist — {CAT} {AMT} 🧹",
   "Hope got warranty hor — {CAT} {AMT} 🧾",
   "Make sure use until worth — {CAT} {AMT} ✅",
-  "Auntie respect — {CAT} {AMT} 🙇",
+  "Auntie respect — {AMT} {CAT} 🙇",
   "Ok log liao, now hibernate spending a bit — {CAT} {AMT} 🐻",
 ];
 
-const SUMMARY_WEEK_HEADERS = [ /* ...same expanded 40 as last message... */ ];
-const SUMMARY_MONTH_HEADERS = [ /* ...same expanded 40 as last message... */ ];
-const SUMMARY_FOOTERS = [ /* ...same expanded 40 as last message... */ ];
-const LIST_HEADERS = [ /* ...same expanded 40 as last message... */ ];
-const UNDO_LINES = [ /* ...same expanded 40 as last message... */ ];
-const TIPS = [ /* ...same expanded 40 as last message... */ ];
-const TODAY_SPICE = [ /* ...20 lines as last message... */ ];
+const SUMMARY_WEEK_HEADERS = [ "Weekly summary coming right up…", "This week ah — here’s your spending:", "Auntie count for this week liao:" ];
+const SUMMARY_MONTH_HEADERS = [ "Monthly summary steady one:", "This month you spend like this:", "Auntie tally for this month:" ];
+const SUMMARY_FOOTERS = [ "Track first, shiok later. 💪", "Small small save, big big dream. ✨", "Power lah. Keep it going. 🔥" ];
+const LIST_HEADERS = [ "Last few entries:", "Your recent logs:", "Just recorded these:" ];
+const UNDO_LINES = [ "Undo ok — removed {CAT} {AMT}.", "Reverse gear engaged. {AMT} for {CAT} deleted.", "Taken out liao: {CAT} {AMT}." ];
+const TIPS = [ "Tip: Pay yourself first. 10% go savings.", "Tip: Drink kopi at home, save $3/day.", "Tip: Big buys? Sleep on it one night." ];
+const TODAY_SPICE = [ "Today you on sia. 🔥", "Wah today banyak record. 👍", "Consistency steady bompi-pi." ];
 
 /* ---- Menu Renderer ---- */
 function renderMenu() {
@@ -400,7 +456,7 @@ function handler(req, res) {
   else if (text.includes("summary")) {
     const now = new Date();
     const isMonth = text.includes("month");
-    const rangeStart = isMonth ? startOfMonth(now) : startOfWeek(now);
+    const rangeStart = isMonth ? startOfMonth(now) : startOfWeek(now));
     const rangeEnd = now;
 
     const entries = user.entries.filter(e => withinRange(e.date, rangeStart, rangeEnd));
@@ -430,16 +486,25 @@ function handler(req, res) {
   else {
     const parsed = parseExpense(body);
     if (parsed) {
+      // NEW: validate business rules (limit < 1,000,000, warn > 99,000)
+      const verdict = validateAmount(parsed.amount);
+      if (!verdict.ok) {
+        reply.body(verdict.errorMsg);
+        return res.type("text/xml").send(twiml.toString());
+      }
+
       const entry = {
         category: normCat(parsed.category).toLowerCase(), // keep spaces, alnum-only, max 13
-        amount: parsed.amount,
+        amount: parsed.amount, // already normalized to 2dp (truncate)
         date: new Date().toISOString(),
       };
       user.entries.push(entry);
       writeData(all);
 
       const todayCount = getTodayCount(user.entries); // after adding
-      reply.body(addResponse(entry.amount, entry.category, todayCount));
+      let msg = addResponse(entry.amount, entry.category, todayCount);
+      if (verdict.warnMsg) msg += `\n\n${verdict.warnMsg}`;
+      reply.body(msg);
     } else {
       reply.body(
         `Hello dear 👋 Start with amount *or* category.\n` +
@@ -520,7 +585,6 @@ app.get("/api/feedback", (req, res) => {
 });
 
 
-
 // ---- Feedback API (JSON-in, stored in data.json) ----
 app.post("/api/feedback", express.json(), (req, res) => {
   try {
@@ -584,8 +648,6 @@ app.get("/api/summary", (req, res) => {
     generatedAt: new Date().toISOString(),
   });
 });
-
-
 
 app.get("/admin/data.json", (req, res) => {
   const key = req.query.key || req.headers["x-admin-key"];

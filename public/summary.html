@@ -38,7 +38,7 @@
   --ring:#F0E6DE;
   --shadow:0 10px 24px rgba(0,0,0,.06);
 
-  /* “Dirty white” panel tints */
+  /* panel tints */
   --panel-kpi:#F9F6F4;
   --panel-viz:#F7FAFA;
   --panel-breakdown:#F9F6F8;
@@ -91,8 +91,10 @@ h1{margin:0;font-size:clamp(1.1rem,1vw+1rem,1.5rem);color:var(--mocha-mousse);}
   color:var(--ink); font-size:.95rem; cursor:pointer;
 }
 .dropdown-item:hover{background:linear-gradient(90deg,#E8FAFC,#fff);}
+.dropdown-item.sep{ height:1px; background:var(--ring); margin:6px 10px; }
+.dropdown-item.danger{ color:#B91C1C; font-weight:700; }
 
-/* Fixed-size refresh button */
+/* Refresh */
 button.primary{
   background:linear-gradient(180deg,#FFE7E1 0%,#FFD9D0 100%);
   border:1px solid #FFD2C8; border-radius:12px;
@@ -113,7 +115,7 @@ button.primary{
   box-shadow:var(--shadow); padding:16px;
 }
 .kpi h3{margin-bottom:4px;font-size:.9rem;color:var(--muted)}
-.value{font-weight:800;font-size:1.4rem;color:var(--ink)}
+.value{font-weight:800;font-size:clamp(1.2rem, 0.9rem + 1vw, 1.6rem);color:var(--ink)}
 .kpi-summary{} .kpi-cats{} .kpi-entries{}
 
 .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
@@ -123,14 +125,14 @@ button.primary{
 .list{background:var(--panel-list)}
 .section-title{margin-bottom:10px;font-weight:800;color:#6E2B20}
 
-/* Tables (base) */
+/* Tables */
 .table{width:100%;border-collapse:collapse}
 .table th,.table td{padding:12px;border-bottom:1px solid #EFE6DD;text-align:left;font-size:.95rem}
 .table th{background:#FFF3EE;color:#7A5D57}
 .amt{text-align:right}
 .pct{color:var(--muted);font-size:.9rem;text-align:right}
 
-/* Recent Entries: smaller, responsive text */
+/* Recent Entries: compact, responsive text */
 .table-recent th,.table-recent td{
   font-size: clamp(.76rem, .70rem + .28vw, .92rem);
   line-height: 1.15;
@@ -185,18 +187,12 @@ canvas{width:100% !important;height:auto !important}
 }
 #fbStatus{ color:var(--muted); font-size:.9rem; margin-left:6px; align-self:center; }
 
-.dropdown-item.sep{ height:1px; background:var(--ring); margin:6px 10px; }
-.dropdown-item.danger{ color:#B91C1C; font-weight:700; }
-
-
-/* Mobile: Summary full width, other two side-by-side */
+/* Mobile layout */
 @media (max-width: 680px){
   .kpis{ grid-template-columns: repeat(2, minmax(0,1fr)); }
   .kpi-summary{ grid-column: 1 / -1; }
   .kpi-cats, .kpi-entries{ grid-column: span 1; }
 }
-
-
 </style>
 </head>
 
@@ -317,7 +313,19 @@ const $=id=>document.getElementById(id);
 /* rounding + formatting */
 const STEP=0.10;
 const roundToStep=(n,step=STEP)=>Math.round((Number(n)||0)/step)*step;
-const money=n=>"S$"+roundToStep(n).toFixed(2);
+
+/* Intl currency with thousands (S$) */
+const sgdFmt = new Intl.NumberFormat("en-SG", {
+  style: "currency",
+  currency: "SGD",
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
+const numFmt = new Intl.NumberFormat("en-SG", {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+});
+const money = n => sgdFmt.format(roundToStep(n));
 
 const capFirst=s=>{s=String(s||"uncategorised").trim();return s? s[0].toUpperCase()+s.slice(1):s;};
 const truncDonut=s=>{s=capFirst(s);return s.length>10? s.slice(0,10)+"...":s;};
@@ -350,38 +358,78 @@ async function fetchSummary(){
 }
 
 /* donut sizing + draw + state for hit-test */
-const donutState={cx:0,cy:0,innerR:0,outerR:0,rows:[]};
+const donutState={cx:0,cy:0,innerR:0,outerR:0,rows:[], sliceAngles:[], lastShownIndex:-1};
+
 function sizeCanvasForDisplay(c){
   const ratio=window.devicePixelRatio||1;
-  const cssW=c.clientWidth, cssH=Math.max(220, c.clientWidth*0.62);
+  const cssW=c.clientWidth, cssH=Math.max(240, c.clientWidth*0.62);
   c.style.height=cssH+"px";
   c.width=Math.floor(cssW*ratio); c.height=Math.floor(cssH*ratio);
   const ctx=c.getContext('2d'); ctx.setTransform(ratio,0,0,ratio,0,0);
   return ctx;
 }
-function drawDonut(c,rows,total){
-  const ctx=sizeCanvasForDisplay(c);
-  const W=c.clientWidth, H=c.clientHeight;
-  ctx.clearRect(0,0,W,H);
-  const cx=W/2, cy=H/2, outerR=Math.min(W,H)*0.42, innerR=outerR*0.6;
-  donutState.cx=cx; donutState.cy=cy; donutState.outerR=outerR; donutState.innerR=innerR; donutState.rows=rows;
 
-  let start=-Math.PI/2;
+function drawDonut(c, rows, total){
+  const ctx = sizeCanvasForDisplay(c);
+  const W = c.clientWidth, H = c.clientHeight;
+  ctx.clearRect(0,0,W,H);
+
+  // Donut geometry
+  const cx = W/2, cy = H/2;
+  const outerR = Math.min(W,H)*0.42;
+  const innerR = outerR*0.6;
+  Object.assign(donutState,{cx,cy,outerR,innerR,rows, sliceAngles:[], lastShownIndex:-1});
+
+  // Slices
+  let start = -Math.PI/2;
   rows.forEach(([cat,amt],i)=>{
-    const frac=total? amt/total:0, angle=frac*Math.PI*2, end=start+angle;
-    ctx.beginPath(); ctx.moveTo(cx,cy);
-    ctx.arc(cx,cy,outerR,start,end); ctx.lineTo(cx,cy);
-    ctx.fillStyle=donutPalette[i%donutPalette.length]; ctx.fill();
-    rows[i].angle=[start,end]; start=end;
+    const frac = total ? amt/total : 0;
+    const angle = frac * Math.PI*2;
+    const end = start + angle;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,outerR,start,end);
+    ctx.lineTo(cx,cy);
+    ctx.fillStyle = donutPalette[i%donutPalette.length];
+    ctx.fill();
+    donutState.sliceAngles[i] = [start,end];
+    start = end;
   });
 
-  ctx.globalCompositeOperation="destination-out";
+  // Hole
+  const prev = ctx.globalCompositeOperation;
+  ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath(); ctx.arc(cx,cy,innerR,0,Math.PI*2); ctx.fill();
-  ctx.globalCompositeOperation="source-over";
+  ctx.globalCompositeOperation = prev;
 
-  ctx.fillStyle="#5B3B33"; ctx.textAlign="center";
-  ctx.font="700 14px ui-sans-serif"; ctx.fillText("Total",cx,cy-10);
-  ctx.font="800 20px ui-sans-serif"; ctx.fillText(money(total),cx,cy+16);
+  // --- Center labels with auto-fit for long amounts ---
+  const amountText = money(total); // e.g., "S$100,000.00"
+
+  // Base sizes scale with canvas width
+  let amountSizeBase = Math.max(18, Math.min(28, Math.floor(W*0.06)));
+  let labelSize = Math.max(12, Math.min(16, Math.floor(amountSizeBase*0.65)));
+
+  // If number is big (>=100k), start smaller on mobile-ish widths
+  if (total >= 100000 && W <= 520) amountSizeBase = Math.max(14, amountSizeBase - 6);
+
+  // Fit amount text within ~85% of inner diameter
+  const maxTextWidth = innerR * 2 * 0.85;
+  let amountSize = amountSizeBase;
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#5B3B33";
+
+  // Shrink until it fits (safety floor at 12px)
+  ctx.font = `800 ${amountSize}px ui-sans-serif`;
+  while (ctx.measureText(amountText).width > maxTextWidth && amountSize > 12){
+    amountSize -= 1;
+    ctx.font = `800 ${amountSize}px ui-sans-serif`;
+  }
+
+  // Draw label + amount
+  ctx.font = `700 ${labelSize}px ui-sans-serif`;
+  ctx.fillText("Total", cx, cy-10);
+  ctx.font = `800 ${amountSize}px ui-sans-serif`;
+  ctx.fillText(amountText, cx, cy+16);
 }
 
 /* renderers */
@@ -426,7 +474,8 @@ function renderRecent(entries){
 /* Exports */
 function exportCSV(rows){
   const d=new Date().toISOString().slice(0,10);
-  let csv="Category,Amount\n"; rows.forEach(([c,a])=>csv+=`${capFirst(c)},${roundToStep(a).toFixed(2)}\n`);
+  let csv="Category,Amount\n";
+  rows.forEach(([c,a])=>{ csv+=`${capFirst(c)},${numFmt.format(roundToStep(a))}\n`; });
   const blob=new Blob([csv],{type:"text/csv"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`auntie-summary-${d}.csv`; a.click();
 }
@@ -435,7 +484,7 @@ function exportPDF(rows){
   const d=new Date().toISOString().slice(0,10);
   const w=window.open("","","width=720,height=820");
   w.document.write("<h3>Auntie Can Count Summary</h3><table border=1 cellspacing=0 cellpadding=6><tr><th>Category</th><th>Amount</th></tr>");
-  rows.forEach(([c,a])=>w.document.write(`<tr><td>${capFirst(c)}</td><td>${roundToStep(a).toFixed(2)}</td></tr>`));
+  rows.forEach(([c,a])=>w.document.write(`<tr><td>${capFirst(c)}</td><td>${sgdFmt.format(roundToStep(a))}</td></tr>`));
   w.document.write("</table>"); w.print(); w.close();
 }
 
@@ -463,12 +512,9 @@ document.querySelector("#exportMenu #exportPdf").addEventListener("click",()=> e
 
 /* 🔴 Clear-my-data action */
 document.querySelector("#exportMenu #clearData").addEventListener("click", async ()=>{
-  // close dropdown
   document.querySelectorAll(".dropdown").forEach(d=>d.classList.remove("open"));
-
   if (!token) { alert("No user token in URL. Cannot clear."); return; }
 
-  // double-confirm for safety
   const ok1 = confirm("Confirm to clear ALL your records? This cannot be undone.");
   if (!ok1) return;
   const ok2 = prompt('Type "CLEAR" to confirm deleting all your entries:');
@@ -483,8 +529,6 @@ document.querySelector("#exportMenu #clearData").addEventListener("click", async
     });
     const js = await res.json().catch(()=> ({}));
     if (!res.ok || !js.ok) throw new Error(js.error || "Failed");
-
-    // Success: refresh UI
     showBubble(`Cleared ${js.countBefore || 0} entries. Fresh start lah ✨`);
     $("status").textContent = "";
     await load();   // refetch & redraw
@@ -506,7 +550,6 @@ fbFab.addEventListener("click", () => {
   fbPanel.classList.toggle("open");
   if (fbPanel.classList.contains("open")) fbText.focus();
 });
-
 document.addEventListener("click", (e)=>{
   if (!fbPanel.contains(e.target) && !fbFab.contains(e.target)) {
     fbPanel.classList.remove("open");
@@ -515,7 +558,6 @@ document.addEventListener("click", (e)=>{
 document.addEventListener("keydown", (e)=>{
   if (e.key === "Escape") fbPanel.classList.remove("open");
 });
-
 fbSubmit.addEventListener("click", async ()=>{
   const msg = fbText.value.trim();
   if (!msg) { fbStatus.textContent = "Write something first 😉"; return; }
@@ -573,8 +615,12 @@ async function load(forceRange){
     scoped=entries.filter(e=>new Date(e.date)>=start);
   }
 
-  const byCat={}; let totalRaw=0;
-  scoped.forEach(e=>{ const key=(e.category||"uncategorised").trim(); const amt=Number(e.amount||0); byCat[key]=(byCat[key]||0)+amt; totalRaw+=amt; });
+  const byCat={}; 
+  scoped.forEach(e=>{
+    const key=(e.category||"uncategorised").trim();
+    const amt=Number(e.amount||0);
+    byCat[key]=(byCat[key]||0)+amt;
+  });
   const rows=Object.entries(byCat).map(([cat,amt])=>[cat, roundToStep(amt)]).sort((a,b)=>b[1]-a[1]);
   const total=rows.reduce((s,[,a])=>s+a,0);
   window.__rows=rows;
@@ -591,7 +637,8 @@ async function load(forceRange){
   drawDonut($("donut"),rows,total);
 
   const donut=$("donut"), popup=$("popup");
-  const outsideClickHandler = (ev)=>{ if(!donut.contains(ev.target)) popup.style.display="none"; };
+
+  const outsideClickHandler = (ev)=>{ if(!donut.contains(ev.target)) { popup.style.display="none"; donutState.lastShownIndex=-1; } };
   document.addEventListener("click", outsideClickHandler, { once:true });
 
   donut.onclick = (e)=>{
@@ -602,28 +649,52 @@ async function load(forceRange){
     const r=Math.hypot(dx,dy);
 
     const inner=donutState.innerR, outer=donutState.outerR;
-    if(r<inner || r>outer){ popup.style.display="none"; return; }
+    if(r<inner || r>outer){ popup.style.display="none"; donutState.lastShownIndex=-1; return; }
 
-    let ang=Math.atan2(dy,dx); if(ang<-Math.PI/2) ang+=2*Math.PI;
-    let shown=false;
-    rows.forEach(([cat,amt],i)=>{
-      const seg=rows[i].angle||[];
-      if(seg.length===2 && ang>seg[0] && ang<seg[1]){
-        popup.style.left=e.pageX+"px";
-        popup.style.top=e.pageY+"px";
-        popup.innerHTML=`<b>${truncDonut(cat)}</b><br>${money(amt)} (${(amt/total*100).toFixed(1)}%)`;
-        popup.style.display="block";
-        shown=true;
-      }
+    // angle in [0, 2π)
+    let ang=Math.atan2(dy,dx);
+    if(ang<0) ang+=2*Math.PI;
+
+    // Our segments start at -π/2; map ang to the same frame
+    const shift = (ang - (-Math.PI/2) + 2*Math.PI) % (2*Math.PI);
+
+    let hitIndex = -1;
+    donutState.sliceAngles.forEach(([s,e],i)=>{
+      const start = (s - (-Math.PI/2) + 2*Math.PI) % (2*Math.PI);
+      const end   = (e - (-Math.PI/2) + 2*Math.PI) % (2*Math.PI);
+      const inside = end>start ? (shift>start && shift<end)
+                               : (shift>start || shift<end);
+      if(inside) hitIndex=i;
     });
-    if(!shown) popup.style.display="none";
+
+    if (hitIndex === -1) { popup.style.display="none"; donutState.lastShownIndex=-1; return; }
+
+    // Toggle same slice
+    if (donutState.lastShownIndex === hitIndex && popup.style.display==="block"){
+      popup.style.display="none";
+      donutState.lastShownIndex=-1;
+      return;
+    }
+
+    const [cat,amt]=donutState.rows[hitIndex] || ["—",0];
+    const totalAmt = donutState.rows.reduce((s,[,a])=>s+a,0) || 1;
+    popup.style.left=e.pageX+"px";
+    popup.style.top=e.pageY+"px";
+    popup.innerHTML=`<b>${truncDonut(cat)}</b><br>${money(amt)} (${((amt/totalAmt)*100).toFixed(1)}%)`;
+    popup.style.display="block";
+    donutState.lastShownIndex=hitIndex;
   };
 }
 
 $("refresh").addEventListener("click",()=>{ load(); });
 maybeShowOneTimeGreeting();
 load();
-window.addEventListener("resize",()=>{ if(window.__rows){ drawDonut($("donut"), window.__rows, window.__rows.reduce((s,[,a])=>s+a,0)); }});
+window.addEventListener("resize",()=>{
+  if(window.__rows){
+    const total = window.__rows.reduce((s,[,a])=>s+a,0);
+    drawDonut($("donut"), window.__rows, total);
+  }
+});
 </script>
 </body>
 </html>
