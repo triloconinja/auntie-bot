@@ -544,6 +544,15 @@ app.get("/api/summary", (req, res) => {
 
 
 
+app.get("/admin/data.json", (req, res) => {
+  const key = req.query.key || req.headers["x-admin-key"];
+  if (!process.env.ADMIN_TOKEN || key !== process.env.ADMIN_TOKEN) {
+    return res.status(401).json({ error: "unauthorized" });
+  }
+  const all = readData();
+  res.json(all);
+});
+
 
 // ---- Health & Root ----
 app.get("/", (_req, res) => res.type("text/plain").send("Auntie Can Count One is online 👵"));
