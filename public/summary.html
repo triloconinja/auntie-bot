@@ -1,91 +1,445 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
 
-  <title>Auntie Can Count One | Weekly Summary</title>
+  <title>Auntie Can Count One | Summary</title>
 
-  <!-- ✅ Open Graph Meta -->
-  <meta property="og:title" content="Auntie Can Count One Summary" />
-  <meta property="og:description" content="See how much kopi, lunch, and fun you spent this week 💸. Auntie helps you track it all!" />
-  <meta property="og:image" content="https://auntie-bot.onrender.com/images/auntie-summary-preview.png" />
-  <meta property="og:url" content="https://auntie-bot.onrender.com/summary.html" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="Auntie Can Count One" />
-
-  <!-- ✅ Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Auntie Can Count One Summary" />
-  <meta name="twitter:description" content="Your weekly kopi + lunch summary by Auntie 👵" />
-  <meta name="twitter:image" content="https://auntie-bot.onrender.com/images/auntie-summary-preview.png" />
+  <!-- Social -->
+  <meta property="og:title" content="Auntie Can Count One Summary"/>
+  <meta property="og:description" content="See how much kopi, lunch, and fun you spent 💸. Auntie helps you track it all!"/>
+  <meta property="og:image" content="/images/auntie-summary-preview.png"/>
+  <meta property="og:url" content="https://auntie-bot.onrender.com/summary.html"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="Auntie Can Count One"/>
+  <meta name="twitter:card" content="summary_large_image"/>
 
   <style>
-    body {
-      font-family: "Arial", sans-serif;
-      background: #fffdf5;
-      padding: 40px;
-      color: #333;
-      max-width: 600px;
-      margin: auto;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    :root{
+      --bg:#faf7f1;
+      --ink:#202020;
+      --muted:#6b7280;
+      --brand:#e14c2a;
+      --brand-ink:#a43118;
+      --card:#ffffff;
+      --ring:#f0eadb;
+      --shadow:0 10px 30px rgba(0,0,0,.07);
+      --radius:16px;
     }
-    h1 { color: #d43f00; }
-    ul { line-height: 1.8; }
-    .footer {
-      margin-top: 20px;
-      font-size: 0.9em;
-      color: #777;
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
+      background:linear-gradient(180deg,#fffcf6 0%,#faf7f1 100%);
+      color:var(--ink);
+    }
+
+    /* App shell */
+    .app{
+      max-width:1100px; margin:auto; padding:28px 18px 40px;
+      display:grid; gap:18px;
+    }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .brand .logo{
+      width:40px;height:40px;border-radius:12px;
+      background:radial-gradient(100% 100% at 30% 30%, #ffdfcf 0%, #ffb39a 60%, #ff8d70 100%);
+      display:grid;place-items:center; box-shadow:var(--shadow);
+      font-weight:800; color:#61250f;
+    }
+    h1{margin:0;font-size:1.35rem;color:var(--brand)}
+    .sub{margin:0;color:var(--muted);font-size:.95rem}
+
+    .controls{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    }
+    .chip{
+      border:1px solid var(--ring); border-radius:999px; padding:8px 12px;
+      background:#fff8f1; color:var(--brand-ink); font-weight:600;
+    }
+    select,button{
+      border:1px solid var(--ring); background:#fff; border-radius:12px;
+      padding:10px 12px; font-size:.95rem;
+    }
+    button.primary{
+      background:linear-gradient(180deg,#ffeadf 0%,#ffd8c9 100%);
+      border-color:#ffd2c5; font-weight:700; color:#6a2c18;
+    }
+    .meta{ color:var(--muted); font-size:.9rem; }
+
+    /* Panels grid */
+    .grid{
+      display:grid; gap:18px;
+      grid-template-columns:repeat(12, 1fr);
+    }
+    .card{
+      background:var(--card); border:1px solid var(--ring); border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:18px;
+    }
+    .kpis{ grid-column: span 12; display:grid; gap:16px; grid-template-columns: repeat(12, 1fr);}
+    .kpi{ grid-column: span 4; background:linear-gradient(180deg,#fff,#fffaf4); border-radius:14px; border:1px solid var(--ring); padding:16px}
+    .kpi h3{margin:0 0 4px; font-size:.9rem; color:var(--muted)}
+    .kpi .value{font-weight:800; font-size:1.4rem}
+
+    .viz{ grid-column: span 6; display:flex; flex-direction:column; gap:10px;}
+    .viz .legend{ display:flex; flex-wrap:wrap; gap:10px; }
+    .legend .tag{ display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#fff8f1; border:1px solid var(--ring); font-size:.9rem}
+    .legend .dot{width:12px;height:12px;border-radius:3px}
+
+    .breakdown{ grid-column: span 6; }
+    .table{
+      width:100%; border-collapse:collapse; border-radius:12px; overflow:hidden;
+    }
+    .table th,.table td{
+      padding:12px; border-bottom:1px solid #f0eadb; text-align:left; font-size:.95rem;
+    }
+    .table th{ background:#fff9f3; color:#7a594f}
+    .table tr:last-child td{border-bottom:none}
+    .amt{ font-variant-numeric: tabular-nums; text-align:right; }
+    .pct{ color:var(--muted); font-size:.9rem; }
+
+    .list{ grid-column: span 12; }
+    .empty{color:var(--muted)}
+    .quip{font-weight:700; margin:10px 0 0}
+
+    .section-title{margin:0 0 10px; font-weight:800; color:#7a2f1e; letter-spacing:.2px}
+
+    /* Responsive */
+    @media (max-width: 960px){
+      .viz{ grid-column: span 12;}
+      .breakdown{ grid-column: span 12;}
+    }
+    @media (max-width: 700px){
+      .kpi{ grid-column: span 12;}
     }
   </style>
 </head>
 <body>
-  <h1>👵 Auntie Can Count One Summary</h1>
-  <p>Here’s your weekly spending overview:</p>
-  <ul id="summary-list">Loading your expenses lah... ⏳</ul>
-  <p><strong id="total"></strong></p>
+  <div class="app">
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo">👵</div>
+        <div>
+          <h1>Auntie Can Count One — Summary</h1>
+          <p class="sub">Clean panels. Tiny donut chart. Very steady ah 💪</p>
+        </div>
+      </div>
+      <div class="controls">
+        <span class="chip">View</span>
+        <select id="range" aria-label="Summary range">
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+          <option value="all">All Time</option>
+        </select>
+        <button id="refresh" class="primary" aria-label="Refresh summary">Refresh</button>
+        <span id="status" class="meta"></span>
+      </div>
+    </div>
 
-  <div class="footer">© 2025 Auntie Can Count One. Built with kopi ☕ and love in Singapore 🇸🇬</div>
+    <!-- KPIs -->
+    <div class="kpis">
+      <div class="kpi">
+        <h3 id="hdr">🧾 Summary</h3>
+        <div id="kpi-total" class="value">S$0.00</div>
+        <div id="kpi-meta" class="meta">—</div>
+      </div>
+      <div class="kpi">
+        <h3>📦 Categories</h3>
+        <div id="kpi-cats" class="value">0</div>
+        <div class="meta">Where your $$ went</div>
+      </div>
+      <div class="kpi">
+        <h3>🗓️ Activity</h3>
+        <div id="kpi-entries" class="value">0</div>
+        <div id="kpi-streak" class="meta">—</div>
+      </div>
+    </div>
 
-  <script>
-  // Get ?user=... from the URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const user = urlParams.get("user");
+    <!-- Chart + Breakdown -->
+    <div class="grid">
+      <div class="card viz">
+        <div class="section-title">Category Donut</div>
+        <canvas id="donut" width="520" height="320" aria-label="Spending donut chart"></canvas>
+        <div id="legend" class="legend"></div>
+      </div>
 
-  if (!user) {
-    document.getElementById("summary-list").innerHTML = "<li>No user found lah 😅</li>";
-  } else {
-    fetch("data.json?_=" + Date.now())
-      .then(res => res.json())
-      .then(all => {
-        const data = all[user] || [];
-        if (!data.length) {
-          document.getElementById("summary-list").innerHTML = "<li>No records yet lah 😅</li>";
-          return;
-        }
+      <div class="card breakdown">
+        <div class="section-title">Breakdown</div>
+        <table class="table" aria-label="Category breakdown table">
+          <thead>
+            <tr><th>Category</th><th class="amt">Amount</th><th class="amt">Share</th></tr>
+          </thead>
+          <tbody id="tbl"></tbody>
+        </table>
+        <p id="quip" class="quip" hidden></p>
+      </div>
 
-        const totals = {};
-        data.forEach(x => {
-          totals[x.category] = (totals[x.category] || 0) + x.amount;
-        });
+      <div class="card list">
+        <div class="section-title">Recent Entries</div>
+        <table class="table" aria-label="Recent entries">
+          <thead>
+            <tr><th>#</th><th>When (SGT)</th><th>Category</th><th class="amt">Amount</th></tr>
+          </thead>
+          <tbody id="recent"></tbody>
+        </table>
+        <p id="empty" class="empty" hidden>No records yet lah 😅</p>
+        <p id="error" class="empty" hidden>Cannot load summary 😢</p>
+      </div>
+    </div>
 
-        let listHtml = "";
-        let total = 0;
-        for (let [cat, amt] of Object.entries(totals)) {
-          listHtml += `<li>${cat}: S$${amt.toFixed(2)}</li>`;
-          total += amt;
-        }
+    <div class="meta" id="generatedAt"></div>
+  </div>
 
-        document.getElementById("summary-list").innerHTML = listHtml;
-        document.getElementById("total").textContent = `💰 Total: S$${total.toFixed(2)}`;
-      })
-      .catch(err => {
-        document.getElementById("summary-list").innerHTML = "<li>Cannot load summary 😢</li>";
-        console.error(err);
-      });
+<script>
+/* ===========================
+   Helpers & Constants
+=========================== */
+const SG_TZ = "Asia/Singapore";
+const params = new URLSearchParams(location.search);
+const token = params.get("u");
+
+const el = id => document.getElementById(id);
+const show = (n, on) => (el(n).hidden = !on);
+const toSG = d => new Date(new Date(d).toLocaleString("en-SG", { timeZone: SG_TZ }));
+const startOfWeek = (d=new Date()) => { const sg=toSG(d); const day=(sg.getDay()+6)%7; sg.setHours(0,0,0,0); sg.setDate(sg.getDate()-day); return sg; };
+const startOfMonth = (d=new Date()) => { const sg=toSG(d); sg.setHours(0,0,0,0); sg.setDate(1); return sg; };
+const within = (iso, from, to) => { const t=new Date(iso); return t>=from && t<=to; };
+const money = n => "S$" + Number(n).toFixed(2);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* witty packs (same spirit as bot) */
+const WEEK_HEADERS = ["🧾 This Week Summary","🧾 Weekly Rundown","🧾 Your Week in Dollars","🧾 Auntie’s Weekly Report","🧾 Weekly Wallet Story","🧾 This Week Damage","🧾 Week Spend Chart","🧾 Weekly Tally","🧾 Week at a Glance","🧾 Weekly Checkout","🧾 Pocket Diary (Week)","🧾 Week Summary Can One","🧾 This Week’s Kopi Count","🧾 Week Spend Breakdown","🧾 Weekly Finance Gossip","🧾 Short Week Recap","🧾 Weekly Budget Pulse","🧾 Your Week, Your $","🧾 Week: Where Money Went","🧾 Auntie’s Week Audit"];
+const MONTH_HEADERS= ["🧾 This Month Summary","🧾 Monthly Rundown","🧾 Your Month in Dollars","🧾 Auntie’s Monthly Report","🧾 Monthly Wallet Story","🧾 This Month Damage","🧾 Month Spend Chart","🧾 Monthly Tally","🧾 Month at a Glance","🧾 Monthly Checkout","🧾 Pocket Diary (Month)","🧾 Month Summary Can One","🧾 This Month’s Kopi Count","🧾 Month Spend Breakdown","🧾 Monthly Finance Gossip","🧾 Long Month Recap","🧾 Monthly Budget Pulse","🧾 Your Month, Your $","🧾 Month: Where Money Went","🧾 Auntie’s Month Audit"];
+const FOOTERS = ["Steady lah, watch your spending 💪","Little by little become mountain 🏔️","Budget got eyes one — good job 👀","Track now, enjoy later 🎯","Discipline today, freedom tomorrow 🚀","Wallet say thank you 🙏","You + Auntie = Power duo ⚡","Your future self clap for you 👏","Don’t let promo code control you 😜","Treat yourself, but treat savings also 🐷","Clean like kopi-o kosong ☕","You’re the CFO of your life 🧠","Kiasu with money is good kind 👍","Wallet doing push-ups now 🏋️","Huat slowly but surely 🧧","From cents to sense 🧩","Auntie proud of you 🥹","Bao jiak plan — continue like this 🍱","Nice lah, consistent like MRT timing (usually) 🚈","Power discipline, power future ⚡"];
+const SPICE_TODAY = ["Today you very hardworking tracking ah 👍","Wah, today your expense diary on fire 🔥","Steady lah — consistent logging is power ⚡","Auntie clap for your discipline 👏","Today you and Auntie best friends already 🤝","Budget streak unlocked 🏅","Your future self say thank you 🙏","Solid logging — CFO material 🧠","Sibei on — keep going 💪","Tracking champion of the day 🏆"];
+const SPICE_HIGH  = ["Auntie’s eyebrow raise a bit 🫣 — careful ah.","Big spender vibes today — balance balance ya ⚖️","Wallet say, “eh bro…” 😂 — but still on track.","Treat yo’ self accepted, save yo’ self tomorrow ✨","Budget warning light blinking a bit 🚨 — steady.","High SES energy detected ✨ — remember drink water 💧","Oof, heart pain a bit — but you’re tracking, good! 🧠","Legendary purchase unlocked 🏆 — next one cheap cheap?","Wallet doing HIIT today 🏋️ — breathe.","Shopee/Lazada pause one minute can? 😅"];
+const rand = a => a[Math.floor(Math.random()*a.length)];
+
+/* Color palette for donut */
+const palette = [
+  "#F25F4C","#FFA67A","#8BD3DD","#4CC9F0","#B8C0FF","#FF7096",
+  "#80ED99","#FFD166","#CDB4DB","#98F5E1","#9B5DE5","#00BBF9",
+  "#FDFFB6","#84A59D","#F6BD60"
+];
+
+/* ===========================
+   Data Flow
+=========================== */
+async function fetchSummary(){
+  if(!token){ el("status").textContent="No token found lah 😅"; return null; }
+  try{
+    el("status").textContent="Fetching…";
+    const res = await fetch(`/api/summary?u=${encodeURIComponent(token)}&_=${Date.now()}`);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    el("status").textContent="";
+    return data;
+  }catch(e){
+    console.error(e);
+    el("status").textContent="";
+    show("error", true);
+    return null;
   }
-</script>
+}
 
+function computeTodayCount(entries){
+  const s=toSG(new Date()); s.setHours(0,0,0,0);
+  const e=toSG(new Date()); e.setHours(23,59,59,999);
+  return entries.filter(x=>within(x.date,s,e)).length;
+}
+
+function filterByRange(entries, range){
+  const now=new Date();
+  if(range==="all") return entries;
+  if(range==="month"){ return entries.filter(e=>within(e.date, startOfMonth(now), now)); }
+  return entries.filter(e=>within(e.date, startOfWeek(now), now)); // week
+}
+
+function aggregate(entries){
+  const byCat = {};
+  let total = 0;
+  for(const e of entries){
+    const cat=(e.category||"uncategorised");
+    const amt=Number(e.amount||0);
+    byCat[cat]=(byCat[cat]||0)+amt;
+    total+=amt;
+  }
+  const rows = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  return { rows, total };
+}
+
+/* ===========================
+   Donut Chart (vanilla canvas)
+=========================== */
+function drawDonut(canvas, rows, total){
+  const ctx = canvas.getContext("2d");
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0,0,W,H);
+
+  const cx = W/2, cy = H/2;
+  const outerR = Math.min(W,H)*0.42;
+  const innerR = outerR*0.62;
+
+  let start = -Math.PI/2;
+  rows.forEach(([cat, amt], i)=>{
+    const frac = total ? amt/total : 0;
+    const angle = frac * Math.PI*2;
+    const end = start + angle;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, outerR, start, end);
+    ctx.lineTo(cx, cy);
+    ctx.fillStyle = palette[i % palette.length];
+    ctx.fill();
+    start = end;
+  });
+
+  // cut hole
+  ctx.globalCompositeOperation = "destination-out";
+  ctx.beginPath();
+  ctx.arc(cx, cy, innerR, 0, Math.PI*2);
+  ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
+
+  // center label
+  ctx.fillStyle = "#341d14";
+  ctx.textAlign = "center";
+  ctx.font = "700 16px ui-sans-serif,system-ui";
+  ctx.fillText("Total", cx, cy-8);
+  ctx.font = "800 22px ui-sans-serif,system-ui";
+  ctx.fillText(money(total), cx, cy+18);
+}
+
+/* ===========================
+   Render UI
+=========================== */
+function renderLegend(rows){
+  const legend = el("legend");
+  legend.innerHTML = "";
+  rows.forEach(([cat, amt], i)=>{
+    const item = document.createElement("div");
+    item.className = "tag";
+    const dot = document.createElement("span");
+    dot.className = "dot";
+    dot.style.background = palette[i % palette.length];
+    item.appendChild(dot);
+    const label = document.createElement("span");
+    label.textContent = `${cat}`;
+    item.appendChild(label);
+    legend.appendChild(item);
+  });
+}
+
+function renderTable(rows, total){
+  const tbody = el("tbl");
+  tbody.innerHTML = "";
+  rows.forEach(([cat, amt], i)=>{
+    const tr = document.createElement("tr");
+    const tdCat = document.createElement("td");
+    tdCat.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:${palette[i%palette.length]}"></span>${esc(cat)}</span>`;
+    const tdAmt = document.createElement("td");
+    tdAmt.className = "amt"; tdAmt.textContent = money(amt);
+    const tdPct = document.createElement("td");
+    tdPct.className = "amt pct";
+    tdPct.textContent = total ? (amt/total*100).toFixed(1)+"%" : "—";
+    tr.appendChild(tdCat); tr.appendChild(tdAmt); tr.appendChild(tdPct);
+    tbody.appendChild(tr);
+  });
+}
+
+function renderRecent(entries){
+  const recent = [...entries].slice(-10).reverse(); // last 10
+  const tbody = el("recent");
+  tbody.innerHTML = "";
+  if(!recent.length){ show("empty", true); return; }
+  show("empty", false);
+  recent.forEach((e, idx)=>{
+    const tr = document.createElement("tr");
+    const tdIdx = document.createElement("td"); tdIdx.textContent = String(idx+1);
+    const tdWhen = document.createElement("td");
+    tdWhen.textContent = new Date(e.date).toLocaleString("en-SG",{timeZone:SG_TZ, hour12:false});
+    const tdCat = document.createElement("td"); tdCat.textContent = e.category || "uncategorised";
+    const tdAmt = document.createElement("td"); tdAmt.className="amt"; tdAmt.textContent = money(e.amount||0);
+    tr.appendChild(tdIdx); tr.appendChild(tdWhen); tr.appendChild(tdCat); tr.appendChild(tdAmt);
+    tbody.appendChild(tr);
+  });
+}
+
+function renderQuips(allEntries, scopedTotal){
+  const todayCount = computeTodayCount(allEntries);
+  const chunks = [];
+  if(todayCount >= 3) chunks.push(rand(SPICE_TODAY));
+  if(scopedTotal >= 200) chunks.push(rand(SPICE_HIGH));
+  chunks.push(rand(FOOTERS));
+  const q = el("quip");
+  q.textContent = chunks.join("  •  ");
+  show("quip", true);
+}
+
+function renderKpis(range, rows, total, entries){
+  // header
+  const hdr = range==="month" ? rand(MONTH_HEADERS)
+            : range==="week"  ? rand(WEEK_HEADERS)
+            : "🧾 All-Time Summary";
+  el("hdr").textContent = hdr;
+  el("kpi-total").textContent = money(total);
+  el("kpi-cats").textContent = rows.length;
+  el("kpi-entries").textContent = entries.length;
+  el("kpi-meta").textContent = range==="month" ? "This month total"
+                            : range==="week"  ? "This week total"
+                            : "All-time total";
+  // simple streak-ish note
+  const today = computeTodayCount(entries);
+  el("kpi-streak").textContent = today>=3 ? "Busy day logging 📈" : today>0 ? "Nice, added today 👍" : "No entries yet today";
+}
+
+/* ===========================
+   Controller
+=========================== */
+async function load(){
+  const data = await fetchSummary();
+  if(!data) return;
+
+  el("generatedAt").textContent = "Generated at: " + new Date(data.generatedAt||Date.now()).toLocaleString("en-SG",{timeZone:SG_TZ, hour12:false});
+
+  const range = el("range").value;
+  const scoped = filterByRange(data.entries, range);
+  if(!scoped.length){
+    // clear visuals
+    el("tbl").innerHTML = "";
+    el("legend").innerHTML = "";
+    const ctx = el("donut").getContext("2d");
+    ctx.clearRect(0,0,el("donut").width, el("donut").height);
+    show("empty", true);
+    el("kpi-total").textContent = "S$0.00";
+    el("kpi-cats").textContent = "0";
+    el("kpi-entries").textContent = String(scoped.length);
+    el("kpi-meta").textContent = range==="month" ? "This month total" : range==="week" ? "This week total" : "All-time total";
+    el("hdr").textContent = range==="month" ? rand(MONTH_HEADERS) : range==="week" ? rand(WEEK_HEADERS) : "🧾 All-Time Summary";
+    return;
+  }
+  show("empty", false);
+
+  const { rows, total } = aggregate(scoped);
+  renderKpis(range, rows, total, scoped);
+  renderLegend(rows);
+  renderTable(rows, total);
+  renderRecent(scoped);
+
+  drawDonut(el("donut"), rows, total);
+  renderQuips(data.entries, total);
+}
+
+/* events */
+el("refresh").addEventListener("click", load);
+el("range").addEventListener("change", load);
+load();
+</script>
 </body>
 </html>
