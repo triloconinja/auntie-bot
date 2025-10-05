@@ -169,12 +169,18 @@ canvas{width:100% !important;height:auto !important}
 }
 #fbStatus{ color:var(--muted); font-size:.9rem; margin-left:6px; align-self:center; }
 
+.dropdown-item.sep{ height:1px; background:var(--ring); margin:6px 10px; }
+.dropdown-item.danger{ color:#B91C1C; font-weight:700; }
+
+
 /* Mobile: Summary full width, other two side-by-side */
 @media (max-width: 680px){
   .kpis{ grid-template-columns: repeat(2, minmax(0,1fr)); }
   .kpi-summary{ grid-column: 1 / -1; }
   .kpi-cats, .kpi-entries{ grid-column: span 1; }
 }
+
+
 </style>
 </head>
 
@@ -213,6 +219,8 @@ canvas{width:100% !important;height:auto !important}
           <div class="dropdown-item" id="exportCsv">📄 CSV</div>
           <div class="dropdown-item" id="exportXls">📊 Excel</div>
           <div class="dropdown-item" id="exportPdf">🖨️ PDF</div>
+          <div class="dropdown-item sep" role="separator"></div>
+          <div class="dropdown-item danger" id="clearData">🧹 Clear My Data</div>
         </div>
       </div>
 
@@ -436,6 +444,40 @@ document.querySelectorAll("#rangeMenu .dropdown-item").forEach(it=>{
 document.querySelector("#exportMenu #exportCsv").addEventListener("click",()=> exportCSV(window.__rows||[]));
 document.querySelector("#exportMenu #exportXls").addEventListener("click",()=> exportExcel(window.__rows||[]));
 document.querySelector("#exportMenu #exportPdf").addEventListener("click",()=> exportPDF(window.__rows||[]));
+
+/* 🔴 Clear-my-data action */
+document.querySelector("#exportMenu #clearData").addEventListener("click", async ()=>{
+  // close dropdown
+  document.querySelectorAll(".dropdown").forEach(d=>d.classList.remove("open"));
+
+  if (!token) { alert("No user token in URL. Cannot clear."); return; }
+
+  // double-confirm for safety
+  const ok1 = confirm("Confirm to clear ALL your records? This cannot be undone.");
+  if (!ok1) return;
+  const ok2 = prompt('Type "CLEAR" to confirm deleting all your entries:');
+  if ((ok2 || "").toUpperCase() !== "CLEAR") return;
+
+  try{
+    $("status").textContent = "Clearing…";
+    const res = await fetch("/api/clear", {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify({ u: token })
+    });
+    const js = await res.json().catch(()=> ({}));
+    if (!res.ok || !js.ok) throw new Error(js.error || "Failed");
+
+    // Success: refresh UI
+    showBubble(`Cleared ${js.countBefore || 0} entries. Fresh start lah ✨`);
+    $("status").textContent = "";
+    await load();   // refetch & redraw
+  }catch(e){
+    console.error(e);
+    $("status").textContent = "";
+    alert("Aiyo, cannot clear now. Try again later.");
+  }
+});
 
 /* Feedback: open/close + submit */
 const fbFab = $("feedbackFab");

@@ -450,6 +450,33 @@ if (authToken) {
   app.post("/whatsapp", handler); // dev fallback
 }
 
+// ---- Clear a user's entries (by summary token) ----
+app.post("/api/clear", express.json(), (req, res) => {
+  try {
+    const { u } = req.body || {};
+    if (!u || typeof u !== "string") {
+      return res.status(400).json({ error: "missing token" });
+    }
+
+    const all = readData();
+    const users = all.users || {};
+    const pair = Object.entries(users).find(([_, v]) => v && v.token === u);
+    if (!pair) return res.status(404).json({ error: "not found" });
+
+    const [key, user] = pair;
+    const before = Array.isArray(user.entries) ? user.entries.length : 0;
+    users[key].entries = [];
+    all.users = users;
+    writeData(all);
+
+    return res.status(200).json({ ok: true, cleared: true, countBefore: before });
+  } catch (e) {
+    console.error("clear error:", e);
+    return res.status(500).json({ error: "failed to clear" });
+  }
+});
+
+
 
 // ---- Feedback API (JSON-in, stored in data.json) ----
 app.post("/api/feedback", express.json(), (req, res) => {
