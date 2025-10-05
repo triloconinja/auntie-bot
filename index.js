@@ -97,23 +97,25 @@ function fixSpacedDecimals(s) {
 */
 function normalizeAmountString(numStr) {
   let num = String(numStr).trim();
-  if (num.includes(",") && num.includes(".")) {
-    num = num.replace(/,/g, "");
-  } else {
-    num = num.replace(",", ".");
-  }
-  // truncate to 2 dp
+  
+  // Always treat commas as thousand separators (never decimal)
+  num = num.replace(/,/g, ""); // remove all commas
+
   const negative = num.startsWith("-");
   if (negative) num = num.slice(1);
+
+  // ensure proper 2dp truncation
   if (num.includes(".")) {
     const [i, d = ""] = num.split(".");
     num = (negative ? "-" : "") + i + "." + d.slice(0, 2).padEnd(2, "0");
   } else {
     num = (negative ? "-" : "") + num + ".00";
   }
+
   const amount = parseFloat(num);
   return isNaN(amount) ? null : amount;
 }
+
 
 /* Amount-first: "23.356 movie", "$4.2 kopi", "1,234.9 laptop" */
 function parseAmountFirst(text) {
