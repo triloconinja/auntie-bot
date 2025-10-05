@@ -10,6 +10,12 @@ const crypto = require("crypto");
 
 // ---- App & Middleware ----
 const app = express();
+
+app.use((req, res, next) => {
+  if (req.path === "/data.json") return res.sendStatus(404);
+  next();
+});
+
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: false }));
 
