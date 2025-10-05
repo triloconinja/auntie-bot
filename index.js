@@ -377,6 +377,11 @@ function renderMenu() {
     "• 3.5 kopi",
     "• $4.20 lunch",
     "• pc repair 133.78",
+    "",
+    "⚠️ *Disclaimer:*",
+    "This system is for *testing and evaluation* purposes only.",
+    "By participating, you acknowledge that *no real personal or financial data* should be submitted.",
+    "All entries are treated as *non-production test data* and will not be shared publicly."
   ].join("\n");
 }
 
@@ -426,6 +431,8 @@ function handler(req, res) {
     all.users[from] = { token: tokenizeUser(from), entries: [] };
     writeData(all);
   }
+  const isFirstEntry = all.users[from].entries.length === 0;
+
   const user = all.users[from];
 
   // --- Commands take priority ---
@@ -502,8 +509,16 @@ function handler(req, res) {
       writeData(all);
 
       const todayCount = getTodayCount(user.entries); // after adding
+      
       let msg = addResponse(entry.amount, entry.category, todayCount);
       if (verdict.warnMsg) msg += `\n\n${verdict.warnMsg}`;
+
+      // 👇 Add disclaimer only on first-ever entry for this user
+      if (isFirstEntry) {
+        msg += "\n\n⚠️ Disclaimer: This system is for testing and evaluation purposes only. By participating, you acknowledge that no real personal or financial data should be submitted. All entries are treated as non-production test data and will not be shared publicly.";
+      }
+
+      
       reply.body(msg);
     } else {
       reply.body(
