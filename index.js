@@ -61,7 +61,7 @@ function validateAmount(amount) {
     return {
       ok: true,
       warnMsg:
-        "Wah big spender ah! Where you get this kind of money — *money laundering ah?* 🤨 You sure you have this amount? *Don’t bluff* in Singlish."
+        "Wah big spender ah! Where you get this kind of money — *money laundering ah?* 🤨 You sure you have this amount? *Don’t bluff me hor*"
     };
   }
   return { ok: true, amount: amt };
