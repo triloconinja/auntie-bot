@@ -58,7 +58,7 @@ h1{margin:0;font-size:clamp(1.1rem,1vw+1rem,1.5rem);color:var(--mocha-mousse);}
   border:1px solid var(--ring); border-radius:12px;
   padding:10px 14px; font-weight:600; color:var(--ink);
   cursor:pointer; display:flex; align-items:center; gap:6px;
-  transition:border-color .2s;
+  transition:border-color .2s; white-space:nowrap;
 }
 .dropdown-btn:hover{border-color:var(--blue-curacao);}
 .dropdown-menu{
@@ -75,10 +75,14 @@ h1{margin:0;font-size:clamp(1.1rem,1vw+1rem,1.5rem);color:var(--mocha-mousse);}
   color:var(--ink); font-size:.95rem; cursor:pointer;
 }
 .dropdown-item:hover{background:linear-gradient(90deg,#E8FAFC,#fff);}
+
+/* Fixed-size refresh button (same size regardless of label length) */
 button.primary{
   background:linear-gradient(180deg,#FFE7E1 0%,#FFD9D0 100%);
   border:1px solid #FFD2C8; border-radius:12px;
-  padding:10px 14px; font-weight:700; color:#6E362D; cursor:pointer;
+  height:40px; min-width:120px;  /* <-- fixed visual size */
+  padding:0 14px; font-weight:700; color:#6E362D; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; white-space:nowrap;
 }
 .meta{color:var(--muted);font-size:.9rem}
 
@@ -94,6 +98,11 @@ button.primary{
 }
 .kpi h3{margin-bottom:4px;font-size:.9rem;color:var(--muted)}
 .value{font-weight:800;font-size:1.4rem;color:var(--ink)}
+/* Give each KPI an id-class for mobile layout control */
+.kpi-summary{}
+.kpi-cats{}
+.kpi-entries{}
+
 .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
 .card{border:1px solid var(--ring);border-radius:16px;box-shadow:var(--shadow);padding:20px}
 .viz{background:var(--panel-viz)}
@@ -123,6 +132,13 @@ canvas{width:100% !important;height:auto !important}
   color:#6E2B20; display:none; animation:fadeIn .4s ease;
 }
 @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Mobile rule: make Categories + Entries side-by-side, Summary full width */
+@media (max-width: 680px){
+  .kpis{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .kpi-summary{ grid-column: 1 / -1; }       /* Summary spans full width on top */
+  .kpi-cats, .kpi-entries{ grid-column: span 1; } /* Side-by-side */
+}
 </style>
 </head>
 
@@ -172,16 +188,16 @@ canvas{width:100% !important;height:auto !important}
 
   <!-- KPIs -->
   <div class="kpis">
-    <div class="kpi">
+    <div class="kpi kpi-summary">
       <h3 id="hdr">🧾 Summary</h3>
       <div id="kpi-total" class="value">S$0.00</div>
       <div id="kpi-meta" class="meta">—</div>
     </div>
-    <div class="kpi">
+    <div class="kpi kpi-cats">
       <h3>📦 Categories</h3>
       <div id="kpi-cats" class="value">0</div>
     </div>
-    <div class="kpi">
+    <div class="kpi kpi-entries">
       <h3>🗓️ Entries</h3>
       <div id="kpi-entries" class="value">0</div>
     </div>
@@ -325,6 +341,7 @@ function renderRecent(entries){
   const tbody=$("recent"); tbody.innerHTML="";
   if(!entries.length){$("empty").hidden=false; return;}
   $("empty").hidden=true;
+  /* strictly show at most 10 rows */
   entries.slice(-10).reverse().forEach((e,i)=>{
     const tr=document.createElement("tr");
     tr.innerHTML=`<td>${i+1}</td>
@@ -415,8 +432,11 @@ async function load(forceRange){
   renderRecent(scoped);
   drawDonut($("donut"),rows,total);
 
-  // DONUT INTERACTION: show only when tapping a slice; otherwise hide
+  // DONUT INTERACTION: show popup ONLY if click is in a slice; hide if outside donut or outside canvas
   const donut=$("donut"), popup=$("popup");
+  const outsideClickHandler = (ev)=>{ if(!donut.contains(ev.target)) popup.style.display="none"; };
+  document.addEventListener("click", outsideClickHandler, { once:true });
+
   donut.onclick = (e)=>{
     const rect=donut.getBoundingClientRect();
     const x=e.clientX-rect.left, y=e.clientY-rect.top;
@@ -424,13 +444,10 @@ async function load(forceRange){
     const dx=x-cx, dy=y-cy;
     const r=Math.hypot(dx,dy);
 
-    // Hit-test: must be within the ring (between inner and outer radii)
     const inner=donutState.innerR, outer=donutState.outerR;
     if(r<inner || r>outer){ popup.style.display="none"; return; }
 
-    // Angle calc in canvas space
     let ang=Math.atan2(dy,dx); if(ang<-Math.PI/2) ang+=2*Math.PI;
-
     let shown=false;
     rows.forEach(([cat,amt],i)=>{
       const seg=rows[i].angle||[];
@@ -444,20 +461,16 @@ async function load(forceRange){
     });
     if(!shown) popup.style.display="none";
   };
-
-  // Hide popup when tapping anywhere outside the donut
-  const hidePopup = (ev)=>{ if(!donut.contains(ev.target)) popup.style.display="none"; };
-  document.addEventListener("click", hidePopup, { once:true });
 }
 
 /* Refresh button */
-$("refresh").addEventListener("click",()=>{ load(); /* bubble does not re-trigger here */ });
+$("refresh").addEventListener("click",()=>{ load(); /* one-time bubble doesn’t re-trigger */ });
 
 /* Init */
 maybeShowOneTimeGreeting();
 load();
 
-/* Re-draw donut responsively on resize */
+/* Resize: redraw donut with current rows */
 window.addEventListener("resize",()=>{ if(window.__rows){ drawDonut($("donut"), window.__rows, window.__rows.reduce((s,[,a])=>s+a,0)); }});
 </script>
 </body>
