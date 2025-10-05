@@ -1,462 +1,473 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Auntie Can Count One | Summary</title>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Auntie Can Count One | Summary</title>
 
-  <!-- Social -->
-  <meta property="og:title" content="Auntie Can Count One Summary"/>
-  <meta property="og:description" content="Your pastel-fresh spending dashboard: witty Auntie quips + donut chart 💸"/>
-  <meta property="og:image" content="/images/auntie-summary-preview.png"/>
-  <meta property="og:url" content="https://auntie-bot.onrender.com/summary.html"/>
-  <meta property="og:type" content="website"/>
-  <meta name="twitter:card" content="summary_large_image"/>
+<style>
+:root{
+  /* Pantone palette */
+  --desert-flower:#E98C7A;
+  --blue-curacao:#58B8C7;
+  --opera-mauve:#C17BA3;
+  --spicy-mustard:#D1AE3A;
+  --mocha-mousse:#9B6B58;
+  --cattleya-orchid:#8E3D79;
 
-  <style>
-    :root{
-      /* Pantone-ish palette */
-      --desert-flower:#E98C7A;
-      --cattleya-orchid:#8E3D79;
-      --opera-mauve:#C17BA3;
-      --blue-curacao:#58B8C7;
-      --spicy-mustard:#D1AE3A;
-      --mocha-mousse:#9B6B58;
+  /* UI */
+  --bg:#FFF9F6;
+  --ink:#1F2328;
+  --muted:#6B7280;
+  --ring:#F0E6DE;
+  --shadow:0 10px 24px rgba(0,0,0,.06);
 
-      /* UI */
-      --bg:#FFF9F6;
-      --ink:#1F2328;
-      --muted:#6B7280;
-      --card:#FFFFFF;
-      --ring:#F0E6DE;
-      --radius:16px;
-      --shadow:0 12px 30px rgba(0,0,0,.06);
+  /* “Dirty white” panel tints */
+  --panel-kpi:#F9F6F4;
+  --panel-viz:#F7FAFA;
+  --panel-breakdown:#F9F6F8;
+  --panel-list:#FAF8F4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:ui-sans-serif,system-ui,"Segoe UI",Roboto,Arial;
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 600px at 10% -10%, rgba(233,140,122,.16), transparent 60%),
+    radial-gradient(1000px 500px at 110% 0%, rgba(88,184,199,.14), transparent 60%),
+    linear-gradient(#FFFDFC,var(--bg));
+  overflow-x:hidden;
+}
+.app{max-width:1100px;margin:auto;padding:20px clamp(14px,3vw,24px) 40px;display:grid;gap:16px;}
+/* Top bar */
+.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.brand{display:flex;align-items:center;gap:12px;}
+.logo{
+  width:48px;height:48px;border-radius:12px;
+  background:linear-gradient(145deg,#FFE4DD,#E3F7FA);
+  display:grid;place-items:center;box-shadow:var(--shadow);
+}
+.logo svg{width:30px;height:30px;stroke:#2B2B2B;fill:none;stroke-width:2;}
+h1{margin:0;font-size:clamp(1.1rem,1vw+1rem,1.5rem);color:var(--mocha-mousse);}
+.sub{margin:0;color:var(--muted);font-size:.95rem}
+/* Controls */
+.controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.dropdown{position:relative}
+.dropdown-btn{
+  background:linear-gradient(180deg,#FDF7F5 0%,#F3EBE6 100%);
+  border:1px solid var(--ring); border-radius:12px;
+  padding:10px 14px; font-weight:600; color:var(--ink);
+  cursor:pointer; display:flex; align-items:center; gap:6px;
+  transition:border-color .2s; white-space:nowrap;
+}
+.dropdown-btn:hover{border-color:var(--blue-curacao);}
+.dropdown-menu{
+  position:absolute; top:110%; left:0; background:#fff;
+  border:1px solid var(--ring); border-radius:12px;
+  box-shadow:0 8px 24px rgba(0,0,0,.08);
+  min-width:170px; padding:6px 0; z-index:100;
+  opacity:0; pointer-events:none; transform:translateY(8px);
+  transition:opacity .25s ease, transform .25s ease;
+}
+.dropdown.open .dropdown-menu{opacity:1; pointer-events:auto; transform:translateY(0);}
+.dropdown-item{
+  padding:10px 14px; display:flex; align-items:center; gap:8px;
+  color:var(--ink); font-size:.95rem; cursor:pointer;
+}
+.dropdown-item:hover{background:linear-gradient(90deg,#E8FAFC,#fff);}
 
-      --brand:var(--desert-flower);
-      --brand-ink:#6E2B20;
+/* Fixed-size refresh button */
+button.primary{
+  background:linear-gradient(180deg,#FFE7E1 0%,#FFD9D0 100%);
+  border:1px solid #FFD2C8; border-radius:12px;
+  height:40px; min-width:120px;
+  padding:0 14px; font-weight:700; color:#6E362D; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; white-space:nowrap;
+}
+.meta{color:var(--muted);font-size:.9rem}
 
-      /* Typography */
-      --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      --step-1: clamp(.95rem, .9rem + .4vw, 1.05rem);
+/* Panels */
+.kpis{
+  display:grid; gap:16px;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+}
+.kpi{
+  background:var(--panel-kpi);
+  border:1px solid var(--ring); border-radius:16px;
+  box-shadow:var(--shadow); padding:16px;
+}
+.kpi h3{margin-bottom:4px;font-size:.9rem;color:var(--muted)}
+.value{font-weight:800;font-size:1.4rem;color:var(--ink)}
+.kpi-summary{} .kpi-cats{} .kpi-entries{}
 
-      /* Donut colors */
-      --slice-1: var(--desert-flower);
-      --slice-2: var(--blue-curacao);
-      --slice-3: var(--opera-mauve);
-      --slice-4: var(--spicy-mustard);
-      --slice-5: var(--cattleya-orchid);
-      --slice-6: var(--mocha-mousse);
-      --slice-7: #F5B5A7;
-      --slice-8: #80CDD7;
-      --slice-9: #D9A9C5;
-      --slice-10:#E4C86A;
-    }
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
+.card{border:1px solid var(--ring);border-radius:16px;box-shadow:var(--shadow);padding:20px}
+.viz{background:var(--panel-viz)}
+.breakdown{background:var(--panel-breakdown)}
+.list{background:var(--panel-list)}
+.section-title{margin-bottom:10px;font-weight:800;color:#6E2B20}
 
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0}
-    body{
-      font-family: var(--font-ui);
-      color: var(--ink);
-      background:
-        radial-gradient(1200px 600px at 10% -10%, rgba(233,140,122,.18), transparent 60%),
-        radial-gradient(1000px 500px at 110% 0%, rgba(88,184,199,.15), transparent 60%),
-        linear-gradient(#FFFDFC, var(--bg));
-    }
+/* Tables (base) */
+.table{width:100%;border-collapse:collapse}
+.table th,.table td{padding:12px;border-bottom:1px solid #EFE6DD;text-align:left;font-size:.95rem}
+.table th{background:#FFF3EE;color:#7A5D57}
+.amt{text-align:right}
+.pct{color:var(--muted);font-size:.9rem;text-align:right}
 
-    .app{ max-width:1100px; margin:auto; padding:20px clamp(14px, 3vw, 24px) 40px; display:grid; gap:16px; }
+/* 🔻 Recent Entries: smaller, responsive text on all screens */
+.table-recent th,.table-recent td{
+  font-size: clamp(.76rem, .70rem + .28vw, .92rem);
+  line-height: 1.15;
+  padding: 8px 10px;         /* tighter rows */
+}
+.table-recent .amt{ font-variant-numeric: tabular-nums; }
 
-    /* Topbar */
-    .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
-    .brand{ display:flex; align-items:center; gap:12px; min-width:0; }
-    .logo{
-      width:42px;height:42px;border-radius:12px;
-      background: radial-gradient(90% 90% at 30% 25%, #FFD8CF 0%, #FFC0B4 45%, var(--desert-flower) 100%);
-      display:grid; place-items:center; box-shadow: var(--shadow);
-      font-size:22px;
-    }
-    h1{ margin:0; font-size: clamp(1.05rem, 0.9rem + 1vw, 1.5rem); color: var(--brand-ink); }
-    .sub{ margin:0; color:var(--muted); font-size: var(--step-1); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* Legend & donut */
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.tag{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:#FFF7F2;border:1px solid var(--ring);font-size:.9rem}
+.dot{width:12px;height:12px;border-radius:3px}
+canvas{width:100% !important;height:auto !important}
 
-    /* Controls */
-    .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
-    .chip{ border:1px solid var(--ring); border-radius:999px; padding:8px 12px; background:#FFF2EE; color: var(--brand-ink); font-weight:600; }
-    select,button{ border:1px solid var(--ring); background:#fff; border-radius:12px; padding:10px 12px; font-size: var(--step-1); }
-    button.primary{ background: linear-gradient(180deg, #FFE7E1 0%, #FFD9D0 100%); border-color:#FFD2C8; font-weight:700; color:#6E362D; }
-    .meta{ color:var(--muted); font-size:.9rem; }
+/* Tooltip & one-time bubble */
+#popup{position:absolute;display:none;pointer-events:none;background:#fff;border:1px solid var(--ring);border-radius:8px;padding:6px 10px;box-shadow:var(--shadow);font-size:.85rem;color:#333;z-index:999}
+#auntie-bubble{
+  position:fixed;bottom:16px;right:16px;max-width:260px;
+  background:#FFFFFF;border:1px solid var(--ring);border-radius:16px;
+  padding:12px 14px; box-shadow:var(--shadow);
+  color:#6E2B20; display:none; animation:fadeIn .4s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 
-    /* Layout */
-    .grid{ display:grid; gap:16px; grid-template-columns: repeat(12, 1fr); }
-    .card{ background:var(--card); border:1px solid var(--ring); border-radius:var(--radius); box-shadow:var(--shadow); padding: clamp(14px, 2.2vw, 20px); }
-    .section-title{ margin:0 0 10px; font-weight:800; letter-spacing:.2px; color:var(--brand-ink); }
-
-    /* KPI row */
-    .kpis{ grid-column: 1 / -1; display:grid; gap:16px; grid-template-columns: repeat(12, 1fr); }
-    .kpi{ grid-column: span 4; background: linear-gradient(180deg, #fff, #FFFAF7); border:1px solid var(--ring); border-radius:14px; padding:14px 16px; }
-    .kpi h3{ margin:0 0 4px; font-size:.92rem; color: var(--muted); font-weight:700; }
-    .value{ font-weight:800; font-size: clamp(1.05rem, 1rem + 1vw, 1.6rem); }
-    .value.accent{ color:var(--brand-ink); }
-
-    /* Viz & Breakdown */
-    .viz{ grid-column: span 6; display:flex; flex-direction:column; gap:12px; }
-    .legend{ display:flex; flex-wrap:wrap; gap:8px; }
-    .tag{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#FFF7F2; border:1px solid var(--ring); font-size:.92rem; }
-    .dot{ width:12px; height:12px; border-radius:3px; }
-
-    .breakdown{ grid-column: span 6; }
-    .table{ width:100%; border-collapse: collapse; border-radius:12px; overflow:hidden; }
-    .table th, .table td{ padding:12px; border-bottom:1px solid #EFE6DD; text-align:left; font-size: var(--step-1); }
-    .table th{ background:#FFF3EE; color:#7A5D57; }
-    .table tr:last-child td{ border-bottom:none; }
-    .amt{ text-align:right; font-variant-numeric: tabular-nums; }
-    .pct{ color:var(--muted); font-size:.9rem; text-align:right; }
-
-    /* NEW: make Recent Entries text smaller (responsive) */
-    .table-recent th, .table-recent td{
-      font-size: clamp(.78rem, .72rem + .25vw, .95rem);
-      line-height: 1.2;
-    }
-
-    /* List panel */
-    .list{ grid-column: 1 / -1; }
-    .empty{ color:var(--muted); }
-    .quip{ font-weight:700; margin:10px 0 0; }
-
-    /* Responsive stack */
-    @media (max-width: 960px){
-      .viz{ grid-column: 1 / -1; }
-      .breakdown{ grid-column: 1 / -1; }
-    }
-    @media (max-width: 740px){
-      .topbar{ flex-direction: column; align-items: stretch; gap:10px; }
-      .controls{ justify-content: space-between; }
-      .sub{ white-space: normal; }
-    }
-    @media (max-width: 680px){
-      .kpi{ grid-column: 1 / -1; }
-    }
-
-    /* Reduce motion */
-    @media (prefers-reduced-motion: reduce){
-      *{ animation:none!important; transition:none!important; }
-    }
-  </style>
+/* Mobile: Summary full width, other two side-by-side */
+@media (max-width: 680px){
+  .kpis{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .kpi-summary{ grid-column: 1 / -1; }
+  .kpi-cats, .kpi-entries{ grid-column: span 1; }
+}
+</style>
 </head>
+
 <body>
-  <div class="app">
-    <!-- Topbar -->
-    <div class="topbar">
-      <div class="brand">
-        <div class="logo">👵</div>
-        <div>
-          <h1>Auntie Can Count One — Summary</h1>
-          <p class="sub">Pastel Pantone dashboard. Donut so tiny but shiok 🍩</p>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo" aria-label="Auntie logo">
+        <svg viewBox="0 0 64 64" role="img" aria-hidden="true">
+          <circle cx="32" cy="32" r="28"/>
+          <circle cx="32" cy="26" r="10"/>
+          <path d="M18 48c8-10 20-10 28 0"/>
+        </svg>
+      </div>
+      <div>
+        <h1>Auntie Can Count One — Summary</h1>
+        <p class="sub">Pastel Pantone dashboard. Donut so tiny but shiok 🍩</p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <!-- Range dropdown -->
+      <div class="dropdown" id="rangeDrop">
+        <div class="dropdown-btn" id="rangeBtn">This Week ▾</div>
+        <div class="dropdown-menu" id="rangeMenu">
+          <div class="dropdown-item" data-range="week">This Week</div>
+          <div class="dropdown-item" data-range="month">This Month</div>
+          <div class="dropdown-item" data-range="all">All Time</div>
         </div>
       </div>
-      <div class="controls">
-        <span class="chip">View</span>
-        <select id="range" aria-label="Summary range">
-          <option value="week">This Week</option>
-          <option value="month">This Month</option>
-          <option value="all">All Time</option>
-        </select>
-        <button id="refresh" class="primary" aria-label="Refresh summary">Refresh</button>
-        <span id="status" class="meta"></span>
+
+      <!-- Export dropdown -->
+      <div class="dropdown" id="exportDrop">
+        <div class="dropdown-btn" id="exportBtn">Export ▾</div>
+        <div class="dropdown-menu" id="exportMenu">
+          <div class="dropdown-item" id="exportCsv">📄 CSV</div>
+          <div class="dropdown-item" id="exportXls">📊 Excel</div>
+          <div class="dropdown-item" id="exportPdf">🖨️ PDF</div>
+        </div>
       </div>
+
+      <button id="refresh" class="primary">Refresh</button>
+      <span id="status" class="meta"></span>
     </div>
-
-    <!-- KPIs -->
-    <div class="kpis">
-      <div class="kpi">
-        <h3 id="hdr">🧾 Summary</h3>
-        <div id="kpi-total" class="value accent">S$0.00</div>
-        <div id="kpi-meta" class="meta">—</div>
-      </div>
-      <div class="kpi">
-        <h3>📦 Categories</h3>
-        <div id="kpi-cats" class="value">0</div>
-        <div class="meta">Where your $$ went</div>
-      </div>
-      <div class="kpi">
-        <h3>🗓️ Entries (range)</h3>
-        <div id="kpi-entries" class="value">0</div>
-        <div id="kpi-streak" class="meta">—</div>
-      </div>
-    </div>
-
-    <!-- Panels -->
-    <div class="grid">
-      <div class="card viz">
-        <div class="section-title">Category Donut</div>
-        <canvas id="donut" aria-label="Spending donut chart" style="width:100%; max-width:640px; height:auto; aspect-ratio: 13/8;"></canvas>
-        <div id="legend" class="legend" aria-label="Legend"></div>
-      </div>
-
-      <div class="card breakdown">
-        <div class="section-title">Breakdown</div>
-        <table class="table" aria-label="Category breakdown table">
-          <thead>
-            <tr><th>Category</th><th class="amt">Amount</th><th class="pct">Share</th></tr>
-          </thead>
-          <tbody id="tbl"></tbody>
-        </table>
-        <p id="quip" class="quip" hidden></p>
-      </div>
-
-      <div class="card list">
-        <div class="section-title">Recent Entries</div>
-        <!-- NEW: smaller, responsive text via .table-recent -->
-        <table class="table table-recent" aria-label="Recent entries">
-          <thead>
-            <tr><th>#</th><th>When (SGT)</th><th>Category</th><th class="amt">Amount</th></tr>
-          </thead>
-          <tbody id="recent"></tbody>
-        </table>
-        <p id="empty" class="empty" hidden>No records yet lah 😅</p>
-        <p id="error" class="empty" hidden>Cannot load summary 😢</p>
-      </div>
-    </div>
-
-    <div class="meta" id="generatedAt"></div>
   </div>
 
+  <!-- KPIs -->
+  <div class="kpis">
+    <div class="kpi kpi-summary">
+      <h3 id="hdr">🧾 Summary</h3>
+      <div id="kpi-total" class="value">S$0.00</div>
+      <div id="kpi-meta" class="meta">—</div>
+    </div>
+    <div class="kpi kpi-cats">
+      <h3>📦 Categories</h3>
+      <div id="kpi-cats" class="value">0</div>
+    </div>
+    <div class="kpi kpi-entries">
+      <h3>🗓️ Entries</h3>
+      <div id="kpi-entries" class="value">0</div>
+    </div>
+  </div>
+
+  <!-- Panels -->
+  <div class="grid">
+    <div class="card viz">
+      <div class="section-title">Category Donut</div>
+      <canvas id="donut" aria-label="Spending donut chart"></canvas>
+      <div id="legend" class="legend"></div>
+    </div>
+
+    <div class="card breakdown">
+      <div class="section-title">Breakdown</div>
+      <table class="table" aria-label="Category breakdown table">
+        <thead><tr><th>Category</th><th class="amt">Amount</th><th class="pct">Share</th></tr></thead>
+        <tbody id="tbl"></tbody>
+      </table>
+    </div>
+
+    <div class="card list">
+      <div class="section-title">Recent Entries</div>
+      <!-- 👇 added .table-recent -->
+      <table class="table table-recent" aria-label="Recent entries">
+        <thead><tr><th>#</th><th>When (SGT)</th><th>Category</th><th class="amt">Amount</th></tr></thead>
+        <tbody id="recent"></tbody>
+      </table>
+      <p id="empty" class="meta" hidden>No records yet lah 😅</p>
+    </div>
+  </div>
+
+  <div class="meta" id="generatedAt"></div>
+</div>
+
+<!-- Tooltip + one-time bubble -->
+<div id="popup"></div>
+<div id="auntie-bubble"></div>
+
 <script>
-/* ========= Helpers & Constants ========= */
-const SG_TZ = "Asia/Singapore";
-const params = new URLSearchParams(location.search);
-const token = params.get("u");
+/* ========= Helpers ========= */
+const SG_TZ="Asia/Singapore";
+const token=new URLSearchParams(location.search).get("u");
+const $=id=>document.getElementById(id);
 
-const $ = id => document.getElementById(id);
-const show = (id, on) => ($(id).hidden = !on);
-const toSG = d => new Date(new Date(d).toLocaleString("en-SG", { timeZone: SG_TZ }));
-const startOfWeek = (d=new Date()) => { const sg=toSG(d); const day=(sg.getDay()+6)%7; sg.setHours(0,0,0,0); sg.setDate(sg.getDate()-day); return sg; };
-const startOfMonth = (d=new Date()) => { const sg=toSG(d); sg.setHours(0,0,0,0); sg.setDate(1); return sg; };
-const within = (iso, from, to) => { const t=new Date(iso); return t>=from && t<=to; };
-const money = n => "S$" + (Math.floor(Number(n||0)*100)/100).toFixed(2);
-const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const rand = a => a[Math.floor(Math.random()*a.length)];
+/* rounding + formatting */
+const STEP=0.10;
+const roundToStep=(n,step=STEP)=>Math.round((Number(n)||0)/step)*step;
+const money=n=>"S$"+roundToStep(n).toFixed(2);
 
-/* Pull CSS variables / font family */
-function getCSS(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-const donutPalette = [
-  getCSS('--slice-1'),getCSS('--slice-2'),getCSS('--slice-3'),getCSS('--slice-4'),getCSS('--slice-5'),
-  getCSS('--slice-6'),getCSS('--slice-7'),getCSS('--slice-8'),getCSS('--slice-9'),getCSS('--slice-10'),
-];
+const capFirst=s=>{s=String(s||"uncategorised").trim();return s? s[0].toUpperCase()+s.slice(1):s;};
+const truncDonut=s=>{s=capFirst(s);return s.length>10? s.slice(0,10)+"...":s;};
+const truncBreakdown=s=>{s=capFirst(s);return s.length>12? s.slice(0,12):s;};
+const truncRecent=s=>{s=capFirst(s);return s.length>13? s.slice(0,13):s;};
 
-/* ========= Data Flow ========= */
+const donutPalette=["#E98C7A","#58B8C7","#C17BA3","#8E3D79","#D1AE3A","#9B6B58"];
+
+/* one-time greeting per load */
+function maybeShowOneTimeGreeting(){
+  if(!sessionStorage.getItem("auntie_greeted")){
+    showBubble("Steady lah 💪 track first then spend!");
+    sessionStorage.setItem("auntie_greeted","1");
+  }
+}
+function showBubble(msg){
+  const b=$("auntie-bubble"); b.textContent=msg; b.style.display="block";
+  setTimeout(()=>b.style.display="none",6000);
+}
+
+/* data */
 async function fetchSummary(){
-  if(!token){ $("status").textContent="No token found lah 😅"; return null; }
+  if(!token){$("status").textContent="No token found lah 😅";return null;}
   try{
     $("status").textContent="Fetching…";
-    const res = await fetch(`/api/summary?u=${encodeURIComponent(token)}&_=${Date.now()}`);
+    const res=await fetch(`/api/summary?u=${encodeURIComponent(token)}&_=${Date.now()}`);
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    $("status").textContent="";
-    return data;
-  }catch(e){
-    console.error(e); $("status").textContent=""; show("error", true); return null;
-  }
+    const data=await res.json(); $("status").textContent=""; return data;
+  }catch(e){ console.error(e); $("status").textContent="Error 😢"; return null; }
 }
 
-function filterByRange(entries, range){
-  const now=new Date();
-  if(range==="all") return entries;
-  if(range==="month") return entries.filter(e=>within(e.date, startOfMonth(now), now));
-  return entries.filter(e=>within(e.date, startOfWeek(now), now)); // week
-}
-function computeTodayCount(entries){
-  const s=toSG(new Date()); s.setHours(0,0,0,0);
-  const e=toSG(new Date()); e.setHours(23,59,59,999);
-  return entries.filter(x=>within(x.date,s,e)).length;
-}
-function aggregate(entries){
-  const byCat = {}; let total = 0;
-  for(const e of entries){
-    const cat=(e.category||"uncategorised");
-    const amt=Number(e.amount||0);
-    byCat[cat]=(byCat[cat]||0)+amt; total+=amt;
-  }
-  return { rows: Object.entries(byCat).sort((a,b)=>b[1]-a[1]), total };
-}
-
-/* ========= Donut (responsive canvas) ========= */
-function sizeCanvasForDisplay(canvas){
-  const ratio = window.devicePixelRatio || 1;
-  const cssW = canvas.clientWidth;
-  const cssH = canvas.clientHeight;
-  canvas.width  = Math.max(300, Math.floor(cssW * ratio));
-  canvas.height = Math.max(200, Math.floor(cssH * ratio));
-  const ctx = canvas.getContext('2d');
-  ctx.setTransform(ratio,0,0,ratio,0,0);
+/* donut sizing + draw + state for hit-test */
+const donutState={cx:0,cy:0,innerR:0,outerR:0,rows:[]};
+function sizeCanvasForDisplay(c){
+  const ratio=window.devicePixelRatio||1;
+  const cssW=c.clientWidth, cssH=Math.max(220, c.clientWidth*0.62);
+  c.style.height=cssH+"px";
+  c.width=Math.floor(cssW*ratio); c.height=Math.floor(cssH*ratio);
+  const ctx=c.getContext('2d'); ctx.setTransform(ratio,0,0,ratio,0,0);
   return ctx;
 }
-function drawDonut(canvas, rows, total){
-  const ctx = sizeCanvasForDisplay(canvas);
-  const W = canvas.clientWidth, H = canvas.clientHeight;
+function drawDonut(c,rows,total){
+  const ctx=sizeCanvasForDisplay(c);
+  const W=c.clientWidth, H=c.clientHeight;
   ctx.clearRect(0,0,W,H);
+  const cx=W/2, cy=H/2, outerR=Math.min(W,H)*0.42, innerR=outerR*0.6;
+  donutState.cx=cx; donutState.cy=cy; donutState.outerR=outerR; donutState.innerR=innerR; donutState.rows=rows;
 
-  const cx = W/2, cy = H/2;
-  const outerR = Math.min(W,H)*0.42;
-  const innerR = outerR*0.60;
-
-  let start = -Math.PI/2;
-  rows.forEach(([cat, amt], i)=>{
-    const frac = total ? amt/total : 0;
-    const angle = frac * Math.PI*2;
-    const end = start + angle;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, outerR, start, end);
-    ctx.lineTo(cx, cy);
-    ctx.fillStyle = donutPalette[i % donutPalette.length];
-    ctx.fill();
-    start = end;
+  let start=-Math.PI/2;
+  rows.forEach(([cat,amt],i)=>{
+    const frac=total? amt/total:0, angle=frac*Math.PI*2, end=start+angle;
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,outerR,start,end); ctx.lineTo(cx,cy);
+    ctx.fillStyle=donutPalette[i%donutPalette.length]; ctx.fill();
+    rows[i].angle=[start,end]; start=end;
   });
 
-  // hole
-  ctx.globalCompositeOperation = "destination-out";
-  ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI*2); ctx.fill();
-  ctx.globalCompositeOperation = "source-over";
+  ctx.globalCompositeOperation="destination-out";
+  ctx.beginPath(); ctx.arc(cx,cy,innerR,0,Math.PI*2); ctx.fill();
+  ctx.globalCompositeOperation="source-over";
 
-  // === Center labels now match header typography ===
-  const headerEl = document.querySelector('.section-title') || document.body;
-  const fam = getComputedStyle(headerEl).fontFamily || getCSS('--font-ui');
-  const col = getComputedStyle(headerEl).color || '#5B3B33';
-
-  ctx.fillStyle = col;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-  // sizes scale with canvas height for consistency desktop/mobile
-  const titleSize = Math.max(12, Math.round(H * 0.06));  // e.g. 24px on big canvases
-  const amtSize   = Math.max(14, Math.round(H * 0.09));  // e.g. 34px on big canvases
-
-  ctx.font = `700 ${titleSize}px ${fam}`;
-  ctx.fillText("Total", cx, cy - titleSize*0.6);
-
-  ctx.font = `800 ${amtSize}px ${fam}`;
-  ctx.fillText(money(total), cx, cy + amtSize*0.1);
+  ctx.fillStyle="#5B3B33"; ctx.textAlign="center";
+  ctx.font="700 14px ui-sans-serif"; ctx.fillText("Total",cx,cy-10);
+  ctx.font="800 20px ui-sans-serif"; ctx.fillText(money(total),cx,cy+16);
 }
 
-/* ========= Render UI ========= */
+/* renderers */
 function renderLegend(rows){
-  const legend = $("legend");
-  legend.innerHTML = "";
-  rows.forEach(([cat], i)=>{
-    const tag = document.createElement("div");
-    tag.className = "tag";
-    const dot = document.createElement("span");
-    dot.className = "dot";
-    dot.style.background = donutPalette[i % donutPalette.length];
-    const label = document.createElement("span");
-    label.textContent = cat;
-    tag.append(dot, label);
-    legend.appendChild(tag);
+  const legend=$("legend"); legend.innerHTML="";
+  rows.forEach(([cat],i)=>{
+    const tag=document.createElement("div"); tag.className="tag";
+    const dot=document.createElement("span"); dot.className="dot";
+    dot.style.background=donutPalette[i%donutPalette.length];
+    const label=document.createElement("span"); label.textContent=truncDonut(cat);
+    tag.append(dot,label); legend.appendChild(tag);
   });
 }
-function renderTable(rows, total){
-  const tbody = $("tbl"); tbody.innerHTML = "";
-  rows.forEach(([cat, amt], i)=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
+function renderTable(rows,total){
+  const tbody=$("tbl"); tbody.innerHTML="";
+  rows.forEach(([cat,amt],i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
       <td><span style="display:inline-flex;align-items:center;gap:8px">
         <span style="width:10px;height:10px;border-radius:3px;background:${donutPalette[i%donutPalette.length]}"></span>
-        ${esc(cat)}
+        ${truncBreakdown(cat)}
       </span></td>
       <td class="amt">${money(amt)}</td>
-      <td class="pct">${total ? (amt/total*100).toFixed(1)+"%" : "—"}</td>`;
+      <td class="pct">${total?(amt/total*100).toFixed(1)+"%":"—"}</td>`;
     tbody.appendChild(tr);
   });
 }
 function renderRecent(entries){
-  const recent = [...entries].slice(-10).reverse();
-  const tbody = $("recent"); tbody.innerHTML = "";
-  if(!recent.length){ show("empty", true); return; }
-  show("empty", false);
-  recent.forEach((e, idx)=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${idx+1}</td>
-      <td>${new Date(e.date).toLocaleString("en-SG",{timeZone:SG_TZ, hour12:false})}</td>
-      <td>${esc((e.category || "uncategorised"))}</td>
+  const tbody=$("recent"); tbody.innerHTML="";
+  if(!entries.length){$("empty").hidden=false; return;}
+  $("empty").hidden=true;
+  entries.slice(-10).reverse().forEach((e,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${i+1}</td>
+      <td>${new Date(e.date).toLocaleString("en-SG",{timeZone:SG_TZ,hour12:false})}</td>
+      <td>${truncRecent(e.category||"uncategorised")}</td>
       <td class="amt">${money(e.amount||0)}</td>`;
     tbody.appendChild(tr);
   });
 }
-function renderQuips(allEntries, scopedTotal){
-  const FOOTERS = ["Steady lah, watch your spending 💪","Little by little become mountain 🏔️","Budget got eyes one — good job 👀","Track now, enjoy later 🎯","Discipline today, freedom tomorrow 🚀","Wallet say thank you 🙏","You + Auntie = Power duo ⚡","Your future self clap for you 👏","Don’t let promo code control you 😜","Treat yourself, but treat savings also 🐷","Clean like kopi-o kosong ☕","You’re the CFO of your life 🧠","Kiasu with money is good kind 👍","Wallet doing push-ups now 🏋️","Huat slowly but surely 🧧","From cents to sense 🧩","Auntie proud of you 🥹","Bao jiak plan — continue like this 🍱","Nice lah, consistent like MRT timing (usually) 🚈","Power discipline, power future ⚡"];
-  const SPICE_TODAY = ["Today you very hardworking tracking ah 👍","Wah, today your expense diary on fire 🔥","Steady lah — consistent logging is power ⚡","Auntie clap for your discipline 👏","Today you and Auntie best friends already 🤝","Budget streak unlocked 🏅","Your future self say thank you 🙏","Solid logging — CFO material 🧠","Sibei on — keep going 💪","Tracking champion of the day 🏆"];
-  const SPICE_HIGH  = ["Auntie’s eyebrow raise a bit 🫣 — careful ah.","Big spender vibes today — balance balance ya ⚖️","Wallet say, “eh bro…” 😂 — but still on track.","Treat yo’ self accepted, save yo’ self tomorrow ✨","Budget warning light blinking a bit 🚨 — steady.","High SES energy detected ✨ — remember drink water 💧","Oof, heart pain a bit — but you’re tracking, good! 🧠","Legendary purchase unlocked 🏆 — next one cheap cheap?","Wallet doing HIIT today 🏋️ — breathe.","Shopee/Lazada pause one minute can? 😅"];
 
-  const chunks = [];
-  if (computeTodayCount(allEntries) >= 3) chunks.push(rand(SPICE_TODAY));
-  if (scopedTotal >= 200) chunks.push(rand(SPICE_HIGH));
-  chunks.push(rand(FOOTERS));
-  $("quip").textContent = chunks.join("  •  ");
-  show("quip", true);
+/* Exports */
+function exportCSV(rows){
+  const d=new Date().toISOString().slice(0,10);
+  let csv="Category,Amount\n"; rows.forEach(([c,a])=>csv+=`${capFirst(c)},${roundToStep(a).toFixed(2)}\n`);
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`auntie-summary-${d}.csv`; a.click();
 }
-function renderKpis(range, rows, total, entries){
-  const WEEK_HEADERS = ["🧾 This Week Summary","🧾 Weekly Rundown","🧾 Your Week in Dollars","🧾 Auntie’s Weekly Report","🧾 Weekly Wallet Story","🧾 This Week Damage","🧾 Week Spend Chart","🧾 Weekly Tally","🧾 Week at a Glance","🧾 Weekly Checkout","🧾 Pocket Diary (Week)","🧾 Week Summary Can One","🧾 This Week’s Kopi Count","🧾 Week Spend Breakdown","🧾 Weekly Finance Gossip","🧾 Short Week Recap","🧾 Weekly Budget Pulse","🧾 Your Week, Your $","🧾 Week: Where Money Went","🧾 Auntie’s Week Audit"];
-  const MONTH_HEADERS= ["🧾 This Month Summary","🧾 Monthly Rundown","🧾 Your Month in Dollars","🧾 Auntie’s Monthly Report","🧾 Monthly Wallet Story","🧾 This Month Damage","🧾 Month Spend Chart","🧾 Monthly Tally","🧾 Month at a Glance","🧾 Monthly Checkout","🧾 Pocket Diary (Month)","🧾 Month Summary Can One","🧾 This Month’s Kopi Count","🧾 Month Spend Breakdown","🧾 Monthly Finance Gossip","🧾 Long Month Recap","🧾 Monthly Budget Pulse","🧾 Your Month, Your $","🧾 Month: Where Money Went","🧾 Auntie’s Month Audit"];
-
-  const hdr = range==="month" ? rand(MONTH_HEADERS)
-            : range==="week"  ? rand(WEEK_HEADERS)
-            : "🧾 All-Time Summary";
-  $("hdr").textContent = hdr;
-  $("kpi-total").textContent = money(total);
-  $("kpi-cats").textContent = rows.length;
-  $("kpi-entries").textContent = entries.length;
-  $("kpi-meta").textContent = range==="month" ? "This month total" : range==="week" ? "This week total" : "All-time total";
-  const today = computeTodayCount(entries);
-  $("kpi-streak").textContent = today>=3 ? "Busy day logging 📈" : today>0 ? "Nice, added today 👍" : "No entries yet today";
+function exportExcel(rows){ exportCSV(rows); }
+function exportPDF(rows){
+  const d=new Date().toISOString().slice(0,10);
+  const w=window.open("","","width=720,height=820");
+  w.document.write("<h3>Auntie Can Count Summary</h3><table border=1 cellspacing=0 cellpadding=6><tr><th>Category</th><th>Amount</th></tr>");
+  rows.forEach(([c,a])=>w.document.write(`<tr><td>${capFirst(c)}</td><td>${roundToStep(a).toFixed(2)}</td></tr>`));
+  w.document.write("</table>"); w.print(); w.close();
 }
 
-/* ========= Controller ========= */
-let _rawData = null;
-async function load(){
-  const data = _rawData ||= await fetchSummary();
-  if (!data) return;
-
-  $("generatedAt").textContent = "Generated at: " + new Date(data.generatedAt||Date.now()).toLocaleString("en-SG",{timeZone:SG_TZ, hour12:false});
-
-  const range = $("range").value;
-  const scoped = filterByRange(data.entries, range);
-
-  if(!scoped.length){
-    $("tbl").innerHTML = ""; $("legend").innerHTML = "";
-    const ctx = $("donut").getContext("2d"); ctx.clearRect(0,0,$("donut").width,$("donut").height);
-    show("empty", true);
-    $("kpi-total").textContent = "S$0.00";
-    $("kpi-cats").textContent = "0";
-    $("kpi-entries").textContent = "0";
-    $("kpi-meta").textContent = range==="month" ? "This month total" : range==="week" ? "This week total" : "All-time total";
-    $("hdr").textContent = range==="month" ? "🧾 Monthly Recap" : range==="week" ? "🧾 Weekly Recap" : "🧾 All-Time Summary";
-    show("quip", false);
-    return;
-  }
-  show("empty", false);
-
-  const { rows, total } = aggregate(scoped);
-  renderKpis(range, rows, total, scoped);
-  renderLegend(rows);
-  renderTable(rows, total);
-  renderRecent(scoped);
-  drawDonut($("donut"), rows, total);
-  renderQuips(data.entries, total);
+/* dropdowns */
+function toggleDrop(el){
+  el.classList.toggle("open");
+  document.querySelectorAll(".dropdown").forEach(d=>{ if(d!==el) d.classList.remove("open"); });
 }
-
-/* Events & Resize handling */
-$("refresh").addEventListener("click", async () => { _rawData = null; await load(); });
-$("range").addEventListener("change", load);
-window.addEventListener("resize", () => {
-  if(_rawData){
-    const range=$("range").value;
-    const scoped=filterByRange(_rawData.entries, range);
-    const { rows, total } = aggregate(scoped);
-    drawDonut($("donut"), rows, total);
-  }
+document.body.addEventListener("click",e=>{
+  if(!e.target.closest(".dropdown")) document.querySelectorAll(".dropdown").forEach(d=>d.classList.remove("open"));
 });
+document.querySelectorAll(".dropdown-btn").forEach(btn=>{
+  btn.addEventListener("click",e=>{ toggleDrop(btn.closest(".dropdown")); e.stopPropagation(); });
+});
+document.querySelectorAll("#rangeMenu .dropdown-item").forEach(it=>{
+  it.addEventListener("click",()=>{
+    $("rangeBtn").textContent = it.textContent + " ▾";
+    document.querySelectorAll(".dropdown").forEach(d=>d.classList.remove("open"));
+    load(it.dataset.range);
+  });
+});
+document.querySelector("#exportMenu #exportCsv").addEventListener("click",()=> exportCSV(window.__rows||[]));
+document.querySelector("#exportMenu #exportXls").addEventListener("click",()=> exportExcel(window.__rows||[]));
+document.querySelector("#exportMenu #exportPdf").addEventListener("click",()=> exportPDF(window.__rows||[]));
 
+/* main load */
+async function load(forceRange){
+  const data=await fetchSummary(); if(!data) return;
+
+  $("generatedAt").textContent="Generated at: "+new Date(data.generatedAt||Date.now())
+    .toLocaleString("en-SG",{timeZone:SG_TZ,hour12:false});
+
+  const label=$("rangeBtn").textContent.toLowerCase();
+  const range = forceRange || (label.includes("month")?"month":label.includes("all")?"all":"week");
+
+  const entries=data.entries||[];
+  const now=new Date();
+  let scoped=entries;
+  if(range==="month"){
+    const start=new Date(now.getFullYear(),now.getMonth(),1);
+    scoped=entries.filter(e=>new Date(e.date)>=start);
+  }else if(range==="week"){
+    const day=(now.getDay()+6)%7; const start=new Date(now);
+    start.setHours(0,0,0,0); start.setDate(now.getDate()-day);
+    scoped=entries.filter(e=>new Date(e.date)>=start);
+  }
+
+  const byCat={}; let totalRaw=0;
+  scoped.forEach(e=>{ const key=(e.category||"uncategorised").trim(); const amt=Number(e.amount||0); byCat[key]=(byCat[key]||0)+amt; totalRaw+=amt; });
+  const rows=Object.entries(byCat).map(([cat,amt])=>[cat, roundToStep(amt)]).sort((a,b)=>b[1]-a[1]);
+  const total=rows.reduce((s,[,a])=>s+a,0);
+  window.__rows=rows;
+
+  $("kpi-total").textContent=money(total);
+  $("kpi-cats").textContent=rows.length;
+  $("kpi-entries").textContent=scoped.length;
+  $("hdr").textContent=range==="month"?"🧾 This Month Summary":range==="all"?"🧾 All-Time Summary":"🧾 This Week Summary";
+  $("kpi-meta").textContent=range==="month"?"This month total":range==="all"?"All-time total":"This week total";
+
+  renderLegend(rows);
+  renderTable(rows,total);
+  renderRecent(scoped);
+  drawDonut($("donut"),rows,total);
+
+  const donut=$("donut"), popup=$("popup");
+  const outsideClickHandler = (ev)=>{ if(!donut.contains(ev.target)) popup.style.display="none"; };
+  document.addEventListener("click", outsideClickHandler, { once:true });
+
+  donut.onclick = (e)=>{
+    const rect=donut.getBoundingClientRect();
+    const x=e.clientX-rect.left, y=e.clientY-rect.top;
+    const cx=rect.width/2, cy=rect.height/2;
+    const dx=x-cx, dy=y-cy;
+    const r=Math.hypot(dx,dy);
+
+    const inner=donutState.innerR, outer=donutState.outerR;
+    if(r<inner || r>outer){ popup.style.display="none"; return; }
+
+    let ang=Math.atan2(dy,dx); if(ang<-Math.PI/2) ang+=2*Math.PI;
+    let shown=false;
+    rows.forEach(([cat,amt],i)=>{
+      const seg=rows[i].angle||[];
+      if(seg.length===2 && ang>seg[0] && ang<seg[1]){
+        popup.style.left=e.pageX+"px";
+        popup.style.top=e.pageY+"px";
+        popup.innerHTML=`<b>${truncDonut(cat)}</b><br>${money(amt)} (${(amt/total*100).toFixed(1)}%)`;
+        popup.style.display="block";
+        shown=true;
+      }
+    });
+    if(!shown) popup.style.display="none";
+  };
+}
+
+$("refresh").addEventListener("click",()=>{ load(); });
+maybeShowOneTimeGreeting();
 load();
+
+window.addEventListener("resize",()=>{ if(window.__rows){ drawDonut($("donut"), window.__rows, window.__rows.reduce((s,[,a])=>s+a,0)); }});
 </script>
 </body>
 </html>
