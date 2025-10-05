@@ -8,114 +8,150 @@
 
   <!-- Social -->
   <meta property="og:title" content="Auntie Can Count One Summary"/>
-  <meta property="og:description" content="See how much kopi, lunch, and fun you spent 💸. Auntie helps you track it all!"/>
+  <meta property="og:description" content="Your pastel-fresh spending dashboard: witty Auntie quips + donut chart 💸"/>
   <meta property="og:image" content="/images/auntie-summary-preview.png"/>
   <meta property="og:url" content="https://auntie-bot.onrender.com/summary.html"/>
   <meta property="og:type" content="website"/>
-  <meta property="og:site_name" content="Auntie Can Count One"/>
   <meta name="twitter:card" content="summary_large_image"/>
 
   <style>
     :root{
-      --bg:#faf7f1;
-      --ink:#202020;
-      --muted:#6b7280;
-      --brand:#e14c2a;
-      --brand-ink:#a43118;
-      --card:#ffffff;
-      --ring:#f0eadb;
-      --shadow:0 10px 30px rgba(0,0,0,.07);
-      --radius:16px;
+      /* Pantone-inspired palette (hex approximations) */
+      --desert-flower: #E98C7A;
+      --cattleya-orchid: #8E3D79;
+      --opera-mauve: #C17BA3;
+      --blue-curacao: #58B8C7;
+      --spicy-mustard: #D1AE3A;
+      --mocha-mousse: #9B6B58;
+
+      /* UI tokens */
+      --bg: #FFF9F6;                 /* airy pastel background */
+      --ink: #1F2328;                /* high-contrast text */
+      --muted: #6B7280;              /* secondary text */
+      --card: #FFFFFF;               /* panels */
+      --ring: #F0E6DE;               /* borders */
+      --radius: 16px;
+      --shadow: 0 12px 30px rgba(0,0,0,.06);
+
+      /* Brand accent (gentle coral from Desert Flower) */
+      --brand: var(--desert-flower);
+      --brand-ink: #7C3E33;
+
+      /* Donut palette rotates these */
+      --slice-1: var(--desert-flower);
+      --slice-2: var(--blue-curacao);
+      --slice-3: var(--opera-mauve);
+      --slice-4: var(--spicy-mustard);
+      --slice-5: var(--cattleya-orchid);
+      --slice-6: var(--mocha-mousse);
+      --slice-7: #F5B5A7; /* tints to extend chart colors smoothly */
+      --slice-8: #80CDD7;
+      --slice-9: #D9A9C5;
+      --slice-10:#E4C86A;
     }
+
     *{box-sizing:border-box}
     html,body{margin:0;padding:0}
     body{
-      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji","Segoe UI Emoji";
-      background:linear-gradient(180deg,#fffcf6 0%,#faf7f1 100%);
-      color:var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(233,140,122,.18), transparent 60%),
+        radial-gradient(1000px 500px at 110% 0%, rgba(88,184,199,.15), transparent 60%),
+        linear-gradient(#FFFDFC, var(--bg));
     }
+    /* Fluid type for comfy mobile/desktop */
+    :root{ --step-1: clamp(0.95rem, 0.9rem + 0.4vw, 1.05rem); }
 
     /* App shell */
     .app{
-      max-width:1100px; margin:auto; padding:28px 18px 40px;
-      display:grid; gap:18px;
+      max-width: 1100px;
+      margin: auto;
+      padding: 20px clamp(14px, 3vw, 24px) 40px;
+      display: grid; gap: 16px;
     }
-    .topbar{
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-    }
-    .brand{
-      display:flex; align-items:center; gap:12px;
-    }
-    .brand .logo{
-      width:40px;height:40px;border-radius:12px;
-      background:radial-gradient(100% 100% at 30% 30%, #ffdfcf 0%, #ffb39a 60%, #ff8d70 100%);
-      display:grid;place-items:center; box-shadow:var(--shadow);
-      font-weight:800; color:#61250f;
-    }
-    h1{margin:0;font-size:1.35rem;color:var(--brand)}
-    .sub{margin:0;color:var(--muted);font-size:.95rem}
 
-    .controls{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    /* Top bar */
+    .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+    .brand{ display:flex; align-items:center; gap:12px; min-width:0; }
+    .logo{
+      width:42px;height:42px;border-radius:12px;
+      background: radial-gradient(90% 90% at 30% 25%, #FFD8CF 0%, #FFC0B4 45%, var(--desert-flower) 100%);
+      display:grid; place-items:center; box-shadow: var(--shadow);
+      font-size: 22px;
     }
+    h1{ margin:0; font-size: clamp(1.05rem, 0.9rem + 1vw, 1.5rem); color: var(--brand-ink); }
+    .sub{ margin:0; color: var(--muted); font-size: var(--step-1); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    /* Controls */
+    .controls{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:flex-end; }
     .chip{
       border:1px solid var(--ring); border-radius:999px; padding:8px 12px;
-      background:#fff8f1; color:var(--brand-ink); font-weight:600;
+      background:#FFF2EE; color: var(--brand-ink); font-weight:600;
     }
     select,button{
       border:1px solid var(--ring); background:#fff; border-radius:12px;
-      padding:10px 12px; font-size:.95rem;
+      padding:10px 12px; font-size: var(--step-1);
     }
     button.primary{
-      background:linear-gradient(180deg,#ffeadf 0%,#ffd8c9 100%);
-      border-color:#ffd2c5; font-weight:700; color:#6a2c18;
+      background: linear-gradient(180deg, #FFE7E1 0%, #FFD9D0 100%);
+      border-color:#FFD2C8; font-weight:700; color:#6E362D;
     }
     .meta{ color:var(--muted); font-size:.9rem; }
 
     /* Panels grid */
-    .grid{
-      display:grid; gap:18px;
-      grid-template-columns:repeat(12, 1fr);
-    }
+    .grid{ display:grid; gap:16px; grid-template-columns: repeat(12, 1fr); }
     .card{
-      background:var(--card); border:1px solid var(--ring); border-radius:var(--radius); box-shadow:var(--shadow);
-      padding:18px;
+      background: var(--card);
+      border: 1px solid var(--ring);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(14px, 2.2vw, 20px);
     }
-    .kpis{ grid-column: span 12; display:grid; gap:16px; grid-template-columns: repeat(12, 1fr);}
-    .kpi{ grid-column: span 4; background:linear-gradient(180deg,#fff,#fffaf4); border-radius:14px; border:1px solid var(--ring); padding:16px}
-    .kpi h3{margin:0 0 4px; font-size:.9rem; color:var(--muted)}
-    .kpi .value{font-weight:800; font-size:1.4rem}
+    .section-title{ margin:0 0 10px; font-weight:800; letter-spacing:.2px; color:#6E2B20; }
 
-    .viz{ grid-column: span 6; display:flex; flex-direction:column; gap:10px;}
-    .viz .legend{ display:flex; flex-wrap:wrap; gap:10px; }
-    .legend .tag{ display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#fff8f1; border:1px solid var(--ring); font-size:.9rem}
-    .legend .dot{width:12px;height:12px;border-radius:3px}
+    /* KPI row */
+    .kpis{ grid-column: 1 / -1; display:grid; gap:16px; grid-template-columns: repeat(12, 1fr); }
+    .kpi{ grid-column: span 4; background: linear-gradient(180deg, #fff, #FFFAF7); border:1px solid var(--ring); border-radius:14px; padding:14px 16px; }
+    .kpi h3{ margin:0 0 4px; font-size:.92rem; color: var(--muted); font-weight:700; }
+    .value{ font-weight:800; font-size: clamp(1.1rem, 1rem + 1vw, 1.6rem); }
+    .value.accent{ color: var(--brand-ink); }
+
+    /* Viz & Breakdown */
+    .viz{ grid-column: span 6; display:flex; flex-direction:column; gap:12px; }
+    .legend{ display:flex; flex-wrap:wrap; gap:8px; }
+    .tag{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; background:#FFF7F2; border:1px solid var(--ring); font-size:.92rem; }
+    .dot{ width:12px; height:12px; border-radius:3px; }
 
     .breakdown{ grid-column: span 6; }
-    .table{
-      width:100%; border-collapse:collapse; border-radius:12px; overflow:hidden;
-    }
-    .table th,.table td{
-      padding:12px; border-bottom:1px solid #f0eadb; text-align:left; font-size:.95rem;
-    }
-    .table th{ background:#fff9f3; color:#7a594f}
-    .table tr:last-child td{border-bottom:none}
-    .amt{ font-variant-numeric: tabular-nums; text-align:right; }
-    .pct{ color:var(--muted); font-size:.9rem; }
+    .table{ width:100%; border-collapse: collapse; border-radius:12px; overflow:hidden; }
+    .table th, .table td{ padding:12px; border-bottom:1px solid #EFE6DD; text-align:left; font-size: var(--step-1); }
+    .table th{ background:#FFF3EE; color:#7A5D57; }
+    .table tr:last-child td{ border-bottom:none; }
+    .amt{ text-align:right; font-variant-numeric: tabular-nums; }
+    .pct{ color:var(--muted); font-size:.9rem; text-align:right; }
 
-    .list{ grid-column: span 12; }
-    .empty{color:var(--muted)}
-    .quip{font-weight:700; margin:10px 0 0}
+    .list{ grid-column: 1 / -1; }
+    .empty{ color:var(--muted); }
+    .quip{ font-weight:700; margin:10px 0 0; }
 
-    .section-title{margin:0 0 10px; font-weight:800; color:#7a2f1e; letter-spacing:.2px}
-
-    /* Responsive */
+    /* Responsive: stack nicely on phones */
     @media (max-width: 960px){
-      .viz{ grid-column: span 12;}
-      .breakdown{ grid-column: span 12;}
+      .viz{ grid-column: 1 / -1; }
+      .breakdown{ grid-column: 1 / -1; }
     }
-    @media (max-width: 700px){
-      .kpi{ grid-column: span 12;}
+    @media (max-width: 740px){
+      .topbar{ flex-direction: column; align-items: stretch; gap:10px; }
+      .controls{ justify-content: space-between; }
+      .sub{ white-space: normal; }
+    }
+    @media (max-width: 680px){
+      .kpi{ grid-column: 1 / -1; }
+    }
+
+    /* Reduce motion preference */
+    @media (prefers-reduced-motion: reduce){
+      *{ animation: none !important; transition: none !important; }
     }
   </style>
 </head>
@@ -127,7 +163,7 @@
         <div class="logo">👵</div>
         <div>
           <h1>Auntie Can Count One — Summary</h1>
-          <p class="sub">Clean panels. Tiny donut chart. Very steady ah 💪</p>
+          <p class="sub">Pastel Pantone dashboard. Mobile-friendly. Donut so tiny but shiok 🍩</p>
         </div>
       </div>
       <div class="controls">
@@ -146,7 +182,7 @@
     <div class="kpis">
       <div class="kpi">
         <h3 id="hdr">🧾 Summary</h3>
-        <div id="kpi-total" class="value">S$0.00</div>
+        <div id="kpi-total" class="value accent">S$0.00</div>
         <div id="kpi-meta" class="meta">—</div>
       </div>
       <div class="kpi">
@@ -155,25 +191,26 @@
         <div class="meta">Where your $$ went</div>
       </div>
       <div class="kpi">
-        <h3>🗓️ Activity</h3>
+        <h3>🗓️ Entries (range)</h3>
         <div id="kpi-entries" class="value">0</div>
         <div id="kpi-streak" class="meta">—</div>
       </div>
     </div>
 
-    <!-- Chart + Breakdown -->
+    <!-- Panels -->
     <div class="grid">
       <div class="card viz">
         <div class="section-title">Category Donut</div>
-        <canvas id="donut" width="520" height="320" aria-label="Spending donut chart"></canvas>
-        <div id="legend" class="legend"></div>
+        <!-- Responsive canvas: width 100%; height scales via JS for crispness -->
+        <canvas id="donut" aria-label="Spending donut chart" style="width:100%; max-width:640px; height:auto; aspect-ratio: 13/8;"></canvas>
+        <div id="legend" class="legend" aria-label="Legend"></div>
       </div>
 
       <div class="card breakdown">
         <div class="section-title">Breakdown</div>
         <table class="table" aria-label="Category breakdown table">
           <thead>
-            <tr><th>Category</th><th class="amt">Amount</th><th class="amt">Share</th></tr>
+            <tr><th>Category</th><th class="amt">Amount</th><th class="pct">Share</th></tr>
           </thead>
           <tbody id="tbl"></tbody>
         </table>
@@ -197,94 +234,90 @@
   </div>
 
 <script>
-/* ===========================
-   Helpers & Constants
-=========================== */
+/* ========= Helpers & Constants ========= */
 const SG_TZ = "Asia/Singapore";
 const params = new URLSearchParams(location.search);
 const token = params.get("u");
 
-const el = id => document.getElementById(id);
-const show = (n, on) => (el(n).hidden = !on);
+const $ = id => document.getElementById(id);
+const show = (id, on) => ($(id).hidden = !on);
 const toSG = d => new Date(new Date(d).toLocaleString("en-SG", { timeZone: SG_TZ }));
 const startOfWeek = (d=new Date()) => { const sg=toSG(d); const day=(sg.getDay()+6)%7; sg.setHours(0,0,0,0); sg.setDate(sg.getDate()-day); return sg; };
 const startOfMonth = (d=new Date()) => { const sg=toSG(d); sg.setHours(0,0,0,0); sg.setDate(1); return sg; };
 const within = (iso, from, to) => { const t=new Date(iso); return t>=from && t<=to; };
 const money = n => "S$" + Number(n).toFixed(2);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rand = a => a[Math.floor(Math.random()*a.length)];
 
-/* witty packs (same spirit as bot) */
+/* Witty packs */
 const WEEK_HEADERS = ["🧾 This Week Summary","🧾 Weekly Rundown","🧾 Your Week in Dollars","🧾 Auntie’s Weekly Report","🧾 Weekly Wallet Story","🧾 This Week Damage","🧾 Week Spend Chart","🧾 Weekly Tally","🧾 Week at a Glance","🧾 Weekly Checkout","🧾 Pocket Diary (Week)","🧾 Week Summary Can One","🧾 This Week’s Kopi Count","🧾 Week Spend Breakdown","🧾 Weekly Finance Gossip","🧾 Short Week Recap","🧾 Weekly Budget Pulse","🧾 Your Week, Your $","🧾 Week: Where Money Went","🧾 Auntie’s Week Audit"];
 const MONTH_HEADERS= ["🧾 This Month Summary","🧾 Monthly Rundown","🧾 Your Month in Dollars","🧾 Auntie’s Monthly Report","🧾 Monthly Wallet Story","🧾 This Month Damage","🧾 Month Spend Chart","🧾 Monthly Tally","🧾 Month at a Glance","🧾 Monthly Checkout","🧾 Pocket Diary (Month)","🧾 Month Summary Can One","🧾 This Month’s Kopi Count","🧾 Month Spend Breakdown","🧾 Monthly Finance Gossip","🧾 Long Month Recap","🧾 Monthly Budget Pulse","🧾 Your Month, Your $","🧾 Month: Where Money Went","🧾 Auntie’s Month Audit"];
 const FOOTERS = ["Steady lah, watch your spending 💪","Little by little become mountain 🏔️","Budget got eyes one — good job 👀","Track now, enjoy later 🎯","Discipline today, freedom tomorrow 🚀","Wallet say thank you 🙏","You + Auntie = Power duo ⚡","Your future self clap for you 👏","Don’t let promo code control you 😜","Treat yourself, but treat savings also 🐷","Clean like kopi-o kosong ☕","You’re the CFO of your life 🧠","Kiasu with money is good kind 👍","Wallet doing push-ups now 🏋️","Huat slowly but surely 🧧","From cents to sense 🧩","Auntie proud of you 🥹","Bao jiak plan — continue like this 🍱","Nice lah, consistent like MRT timing (usually) 🚈","Power discipline, power future ⚡"];
 const SPICE_TODAY = ["Today you very hardworking tracking ah 👍","Wah, today your expense diary on fire 🔥","Steady lah — consistent logging is power ⚡","Auntie clap for your discipline 👏","Today you and Auntie best friends already 🤝","Budget streak unlocked 🏅","Your future self say thank you 🙏","Solid logging — CFO material 🧠","Sibei on — keep going 💪","Tracking champion of the day 🏆"];
 const SPICE_HIGH  = ["Auntie’s eyebrow raise a bit 🫣 — careful ah.","Big spender vibes today — balance balance ya ⚖️","Wallet say, “eh bro…” 😂 — but still on track.","Treat yo’ self accepted, save yo’ self tomorrow ✨","Budget warning light blinking a bit 🚨 — steady.","High SES energy detected ✨ — remember drink water 💧","Oof, heart pain a bit — but you’re tracking, good! 🧠","Legendary purchase unlocked 🏆 — next one cheap cheap?","Wallet doing HIIT today 🏋️ — breathe.","Shopee/Lazada pause one minute can? 😅"];
-const rand = a => a[Math.floor(Math.random()*a.length)];
 
-/* Color palette for donut */
-const palette = [
-  "#F25F4C","#FFA67A","#8BD3DD","#4CC9F0","#B8C0FF","#FF7096",
-  "#80ED99","#FFD166","#CDB4DB","#98F5E1","#9B5DE5","#00BBF9",
-  "#FDFFB6","#84A59D","#F6BD60"
+/* Donut colors from CSS vars */
+const donutPalette = [
+  getCSS('--slice-1'),getCSS('--slice-2'),getCSS('--slice-3'),getCSS('--slice-4'),getCSS('--slice-5'),
+  getCSS('--slice-6'),getCSS('--slice-7'),getCSS('--slice-8'),getCSS('--slice-9'),getCSS('--slice-10'),
 ];
+function getCSS(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
 
-/* ===========================
-   Data Flow
-=========================== */
+/* ========= Data Flow ========= */
 async function fetchSummary(){
-  if(!token){ el("status").textContent="No token found lah 😅"; return null; }
+  if(!token){ $("status").textContent="No token found lah 😅"; return null; }
   try{
-    el("status").textContent="Fetching…";
+    $("status").textContent="Fetching…";
     const res = await fetch(`/api/summary?u=${encodeURIComponent(token)}&_=${Date.now()}`);
     if(!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    el("status").textContent="";
+    $("status").textContent="";
     return data;
   }catch(e){
-    console.error(e);
-    el("status").textContent="";
-    show("error", true);
-    return null;
+    console.error(e); $("status").textContent=""; show("error", true); return null;
   }
-}
-
-function computeTodayCount(entries){
-  const s=toSG(new Date()); s.setHours(0,0,0,0);
-  const e=toSG(new Date()); e.setHours(23,59,59,999);
-  return entries.filter(x=>within(x.date,s,e)).length;
 }
 
 function filterByRange(entries, range){
   const now=new Date();
   if(range==="all") return entries;
-  if(range==="month"){ return entries.filter(e=>within(e.date, startOfMonth(now), now)); }
+  if(range==="month") return entries.filter(e=>within(e.date, startOfMonth(now), now));
   return entries.filter(e=>within(e.date, startOfWeek(now), now)); // week
 }
-
+function computeTodayCount(entries){
+  const s=toSG(new Date()); s.setHours(0,0,0,0);
+  const e=toSG(new Date()); e.setHours(23,59,59,999);
+  return entries.filter(x=>within(x.date,s,e)).length;
+}
 function aggregate(entries){
-  const byCat = {};
-  let total = 0;
+  const byCat = {}; let total = 0;
   for(const e of entries){
     const cat=(e.category||"uncategorised");
     const amt=Number(e.amount||0);
-    byCat[cat]=(byCat[cat]||0)+amt;
-    total+=amt;
+    byCat[cat]=(byCat[cat]||0)+amt; total+=amt;
   }
-  const rows = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
-  return { rows, total };
+  return { rows: Object.entries(byCat).sort((a,b)=>b[1]-a[1]), total };
 }
 
-/* ===========================
-   Donut Chart (vanilla canvas)
-=========================== */
+/* ========= Donut (responsive, vanilla canvas) ========= */
+function sizeCanvasForDisplay(canvas){
+  const ratio = window.devicePixelRatio || 1;
+  const cssW = canvas.clientWidth;
+  const cssH = canvas.clientHeight;
+  canvas.width  = Math.max(300, Math.floor(cssW * ratio));
+  canvas.height = Math.max(200, Math.floor(cssH * ratio));
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(ratio,0,0,ratio,0,0); // scale drawing to look crisp
+  return ctx;
+}
 function drawDonut(canvas, rows, total){
-  const ctx = canvas.getContext("2d");
-  const W = canvas.width, H = canvas.height;
+  const ctx = sizeCanvasForDisplay(canvas);
+  const W = canvas.clientWidth, H = canvas.clientHeight;
   ctx.clearRect(0,0,W,H);
 
   const cx = W/2, cy = H/2;
   const outerR = Math.min(W,H)*0.42;
-  const innerR = outerR*0.62;
+  const innerR = outerR*0.60;
 
   let start = -Math.PI/2;
   rows.forEach(([cat, amt], i)=>{
@@ -295,133 +328,112 @@ function drawDonut(canvas, rows, total){
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, outerR, start, end);
     ctx.lineTo(cx, cy);
-    ctx.fillStyle = palette[i % palette.length];
+    ctx.fillStyle = donutPalette[i % donutPalette.length];
     ctx.fill();
     start = end;
   });
 
-  // cut hole
+  // hole
   ctx.globalCompositeOperation = "destination-out";
-  ctx.beginPath();
-  ctx.arc(cx, cy, innerR, 0, Math.PI*2);
-  ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, innerR, 0, Math.PI*2); ctx.fill();
   ctx.globalCompositeOperation = "source-over";
 
   // center label
-  ctx.fillStyle = "#341d14";
+  ctx.fillStyle = "#5B3B33";
   ctx.textAlign = "center";
-  ctx.font = "700 16px ui-sans-serif,system-ui";
-  ctx.fillText("Total", cx, cy-8);
-  ctx.font = "800 22px ui-sans-serif,system-ui";
-  ctx.fillText(money(total), cx, cy+18);
+  ctx.font = "700 14px ui-sans-serif,system-ui";
+  ctx.fillText("Total", cx, cy-10);
+  ctx.font = "800 20px ui-sans-serif,system-ui";
+  ctx.fillText(money(total), cx, cy+16);
 }
 
-/* ===========================
-   Render UI
-=========================== */
+/* ========= Render UI ========= */
 function renderLegend(rows){
-  const legend = el("legend");
+  const legend = $("legend");
   legend.innerHTML = "";
-  rows.forEach(([cat, amt], i)=>{
-    const item = document.createElement("div");
-    item.className = "tag";
+  rows.forEach(([cat], i)=>{
+    const tag = document.createElement("div");
+    tag.className = "tag";
     const dot = document.createElement("span");
     dot.className = "dot";
-    dot.style.background = palette[i % palette.length];
-    item.appendChild(dot);
+    dot.style.background = donutPalette[i % donutPalette.length];
     const label = document.createElement("span");
-    label.textContent = `${cat}`;
-    item.appendChild(label);
-    legend.appendChild(item);
+    label.textContent = cat;
+    tag.append(dot, label);
+    legend.appendChild(tag);
   });
 }
-
 function renderTable(rows, total){
-  const tbody = el("tbl");
-  tbody.innerHTML = "";
+  const tbody = $("tbl"); tbody.innerHTML = "";
   rows.forEach(([cat, amt], i)=>{
     const tr = document.createElement("tr");
-    const tdCat = document.createElement("td");
-    tdCat.innerHTML = `<span style="display:inline-flex;align-items:center;gap:8px"><span style="width:10px;height:10px;border-radius:3px;background:${palette[i%palette.length]}"></span>${esc(cat)}</span>`;
-    const tdAmt = document.createElement("td");
-    tdAmt.className = "amt"; tdAmt.textContent = money(amt);
-    const tdPct = document.createElement("td");
-    tdPct.className = "amt pct";
-    tdPct.textContent = total ? (amt/total*100).toFixed(1)+"%" : "—";
-    tr.appendChild(tdCat); tr.appendChild(tdAmt); tr.appendChild(tdPct);
+    tr.innerHTML = `
+      <td><span style="display:inline-flex;align-items:center;gap:8px">
+        <span style="width:10px;height:10px;border-radius:3px;background:${donutPalette[i%donutPalette.length]}"></span>
+        ${esc(cat)}
+      </span></td>
+      <td class="amt">${money(amt)}</td>
+      <td class="pct">${total ? (amt/total*100).toFixed(1)+"%" : "—"}</td>`;
     tbody.appendChild(tr);
   });
 }
-
 function renderRecent(entries){
-  const recent = [...entries].slice(-10).reverse(); // last 10
-  const tbody = el("recent");
-  tbody.innerHTML = "";
+  const recent = [...entries].slice(-10).reverse();
+  const tbody = $("recent"); tbody.innerHTML = "";
   if(!recent.length){ show("empty", true); return; }
   show("empty", false);
   recent.forEach((e, idx)=>{
     const tr = document.createElement("tr");
-    const tdIdx = document.createElement("td"); tdIdx.textContent = String(idx+1);
-    const tdWhen = document.createElement("td");
-    tdWhen.textContent = new Date(e.date).toLocaleString("en-SG",{timeZone:SG_TZ, hour12:false});
-    const tdCat = document.createElement("td"); tdCat.textContent = e.category || "uncategorised";
-    const tdAmt = document.createElement("td"); tdAmt.className="amt"; tdAmt.textContent = money(e.amount||0);
-    tr.appendChild(tdIdx); tr.appendChild(tdWhen); tr.appendChild(tdCat); tr.appendChild(tdAmt);
+    tr.innerHTML = `
+      <td>${idx+1}</td>
+      <td>${new Date(e.date).toLocaleString("en-SG",{timeZone:SG_TZ, hour12:false})}</td>
+      <td>${esc(e.category || "uncategorised")}</td>
+      <td class="amt">${money(e.amount||0)}</td>`;
     tbody.appendChild(tr);
   });
 }
-
 function renderQuips(allEntries, scopedTotal){
-  const todayCount = computeTodayCount(allEntries);
   const chunks = [];
-  if(todayCount >= 3) chunks.push(rand(SPICE_TODAY));
-  if(scopedTotal >= 200) chunks.push(rand(SPICE_HIGH));
+  if (computeTodayCount(allEntries) >= 3) chunks.push(rand(SPICE_TODAY));
+  if (scopedTotal >= 200) chunks.push(rand(SPICE_HIGH));
   chunks.push(rand(FOOTERS));
-  const q = el("quip");
-  q.textContent = chunks.join("  •  ");
+  $("quip").textContent = chunks.join("  •  ");
   show("quip", true);
 }
-
 function renderKpis(range, rows, total, entries){
-  // header
   const hdr = range==="month" ? rand(MONTH_HEADERS)
             : range==="week"  ? rand(WEEK_HEADERS)
             : "🧾 All-Time Summary";
-  el("hdr").textContent = hdr;
-  el("kpi-total").textContent = money(total);
-  el("kpi-cats").textContent = rows.length;
-  el("kpi-entries").textContent = entries.length;
-  el("kpi-meta").textContent = range==="month" ? "This month total"
-                            : range==="week"  ? "This week total"
-                            : "All-time total";
-  // simple streak-ish note
+  $("hdr").textContent = hdr;
+  $("kpi-total").textContent = money(total);
+  $("kpi-cats").textContent = rows.length;
+  $("kpi-entries").textContent = entries.length;
+  $("kpi-meta").textContent = range==="month" ? "This month total" : range==="week" ? "This week total" : "All-time total";
   const today = computeTodayCount(entries);
-  el("kpi-streak").textContent = today>=3 ? "Busy day logging 📈" : today>0 ? "Nice, added today 👍" : "No entries yet today";
+  $("kpi-streak").textContent = today>=3 ? "Busy day logging 📈" : today>0 ? "Nice, added today 👍" : "No entries yet today";
 }
 
-/* ===========================
-   Controller
-=========================== */
+/* ========= Controller ========= */
+let _rawData = null;
 async function load(){
-  const data = await fetchSummary();
-  if(!data) return;
+  const data = _rawData ||= await fetchSummary();
+  if (!data) return;
 
-  el("generatedAt").textContent = "Generated at: " + new Date(data.generatedAt||Date.now()).toLocaleString("en-SG",{timeZone:SG_TZ, hour12:false});
+  $("generatedAt").textContent = "Generated at: " + new Date(data.generatedAt||Date.now()).toLocaleString("en-SG",{timeZone:SG_TZ, hour12:false});
 
-  const range = el("range").value;
+  const range = $("range").value;
   const scoped = filterByRange(data.entries, range);
+  // Update instantly on range change (no refetch)
   if(!scoped.length){
-    // clear visuals
-    el("tbl").innerHTML = "";
-    el("legend").innerHTML = "";
-    const ctx = el("donut").getContext("2d");
-    ctx.clearRect(0,0,el("donut").width, el("donut").height);
+    $("tbl").innerHTML = ""; $("legend").innerHTML = "";
+    const ctx = $("donut").getContext("2d"); ctx.clearRect(0,0,$("donut").width,$("donut").height);
     show("empty", true);
-    el("kpi-total").textContent = "S$0.00";
-    el("kpi-cats").textContent = "0";
-    el("kpi-entries").textContent = String(scoped.length);
-    el("kpi-meta").textContent = range==="month" ? "This month total" : range==="week" ? "This week total" : "All-time total";
-    el("hdr").textContent = range==="month" ? rand(MONTH_HEADERS) : range==="week" ? rand(WEEK_HEADERS) : "🧾 All-Time Summary";
+    $("kpi-total").textContent = "S$0.00";
+    $("kpi-cats").textContent = "0";
+    $("kpi-entries").textContent = "0";
+    $("kpi-meta").textContent = range==="month" ? "This month total" : range==="week" ? "This week total" : "All-time total";
+    $("hdr").textContent = range==="month" ? rand(MONTH_HEADERS) : range==="week" ? rand(WEEK_HEADERS) : "🧾 All-Time Summary";
+    show("quip", false);
     return;
   }
   show("empty", false);
@@ -431,14 +443,15 @@ async function load(){
   renderLegend(rows);
   renderTable(rows, total);
   renderRecent(scoped);
-
-  drawDonut(el("donut"), rows, total);
+  drawDonut($("donut"), rows, total);
   renderQuips(data.entries, total);
 }
 
-/* events */
-el("refresh").addEventListener("click", load);
-el("range").addEventListener("change", load);
+/* Events & Resize handling */
+$("refresh").addEventListener("click", async () => { _rawData = null; await load(); });
+$("range").addEventListener("change", load);
+window.addEventListener("resize", () => { if(_rawData){ const range=$("range").value; const scoped=filterByRange(_rawData.entries, range); const { rows, total } = aggregate(scoped); drawDonut($("donut"), rows, total); }});
+
 load();
 </script>
 </body>
