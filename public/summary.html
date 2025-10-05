@@ -471,30 +471,113 @@ function renderRecent(entries){
   });
 }
 
-/* ===== Exports (CSV fixed with quoting + BOM) ===== */
+/* ===== Exports with GRAND TOTAL (CSV safe quoting + BOM, .xls HTML, PDF) ===== */
 function csvCell(v){
   const s = String(v ?? "");
   return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
 }
+function sumRows(rows){
+  return rows.reduce((s,[,a])=> s + (Number(a)||0), 0);
+}
+
+/* CSV: quoted fields + UTF-8 BOM + Total row */
 function exportCSV(rows){
   const d=new Date().toISOString().slice(0,10);
+  const total = sumRows(rows);
+
   let csv="Category,Amount (SGD)\n";
   rows.forEach(([c,a])=>{
     const cat = csvCell(capFirst(c));
     const amt = csvCell(numFmt.format(roundToStep(a))); // may contain thousands commas
     csv += `${cat},${amt}\n`;
   });
+
+  // Blank line + Grand Total
+  csv += `\n${csvCell("Total")},${csvCell(numFmt.format(roundToStep(total)))}\n`;
+
   const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`auntie-summary-${d}.csv`; a.click();
 }
-// Map “Excel” button to CSV for maximum compatibility
-function exportExcel(rows){ exportCSV(rows); }
+
+/* Excel: HTML table (.xls) with bold Total row */
+function exportExcel(rows){
+  const d = new Date().toISOString().slice(0,10);
+  const total = sumRows(rows);
+
+  const table = `
+    <html><head><meta charset="UTF-8"></head><body>
+    <table border="1" cellspacing="0" cellpadding="6">
+      <thead>
+        <tr style="background:#FFF3EE;color:#7A5D57">
+          <th align="left">Category</th>
+          <th align="right">Amount (SGD)</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(([c,a]) => `
+          <tr>
+            <td>${capFirst(c)}</td>
+            <td align="right">${sgdFmt.format(roundToStep(a))}</td>
+          </tr>`).join("")}
+      </tbody>
+      <tfoot>
+        <tr>
+          <td align="right"><b>Total</b></td>
+          <td align="right"><b>${sgdFmt.format(roundToStep(total))}</b></td>
+        </tr>
+      </tfoot>
+    </table>
+    </body></html>`.trim();
+
+  const blob = new Blob([table], { type: "application/vnd.ms-excel" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `auntie-summary-${d}.xls`;
+  a.click();
+}
+
+/* PDF: print-friendly with Total row */
 function exportPDF(rows){
-  const d=new Date().toISOString().slice(0,10);
-  const w=window.open("","","width=720,height=820");
-  w.document.write("<h3>Auntie Can Count Summary</h3><table border=1 cellspacing=0 cellpadding=6><tr><th>Category</th><th>Amount</th></tr>");
-  rows.forEach(([c,a])=>w.document.write(`<tr><td>${capFirst(c)}</td><td>${sgdFmt.format(roundToStep(a))}</td></tr>`));
-  w.document.write("</table>"); w.print(); w.close();
+  const d = new Date().toISOString().slice(0,10);
+  const total = sumRows(rows);
+  const w = window.open("","","width=720,height=820");
+
+  w.document.write(`
+    <html><head><meta charset="UTF-8"><title>Auntie Can Count Summary</title>
+      <style>
+        body{font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Arial;margin:16px}
+        h3{margin:0 0 10px}
+        table{border-collapse:collapse;width:100%}
+        th,td{border:1px solid #ccc;padding:8px;font-size:13px}
+        th{background:#f8f8f8}
+        tfoot td{font-weight:700}
+        td.amt{text-align:right}
+      </style>
+    </head><body>
+      <h3>Auntie Can Count Summary (${d})</h3>
+      <table>
+        <thead><tr><th>Category</th><th>Amount (SGD)</th></tr></thead>
+        <tbody>
+          ${rows.map(([c,a])=>`
+            <tr>
+              <td>${capFirst(c)}</td>
+              <td class="amt">${sgdFmt.format(roundToStep(a))}</td>
+            </tr>`).join("")}
+        </tbody>
+        <tfoot>
+          <tr>
+            <td style="text-align:right">Total</td>
+            <td class="amt">${sgdFmt.format(roundToStep(total))}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </body></html>
+  `);
+
+  w.document.close();
+  w.focus();
+  w.print();
+  w.close();
 }
 
 /* dropdowns */
