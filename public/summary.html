@@ -471,14 +471,23 @@ function renderRecent(entries){
   });
 }
 
-/* Exports */
+/* ===== Exports (CSV fixed with quoting + BOM) ===== */
+function csvCell(v){
+  const s = String(v ?? "");
+  return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+}
 function exportCSV(rows){
   const d=new Date().toISOString().slice(0,10);
-  let csv="Category,Amount\n";
-  rows.forEach(([c,a])=>{ csv+=`${capFirst(c)},${numFmt.format(roundToStep(a))}\n`; });
-  const blob=new Blob([csv],{type:"text/csv"});
+  let csv="Category,Amount (SGD)\n";
+  rows.forEach(([c,a])=>{
+    const cat = csvCell(capFirst(c));
+    const amt = csvCell(numFmt.format(roundToStep(a))); // may contain thousands commas
+    csv += `${cat},${amt}\n`;
+  });
+  const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`auntie-summary-${d}.csv`; a.click();
 }
+// Map “Excel” button to CSV for maximum compatibility
 function exportExcel(rows){ exportCSV(rows); }
 function exportPDF(rows){
   const d=new Date().toISOString().slice(0,10);
